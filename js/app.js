@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   initMap();
+  enableUserLocation();
   setupEventListeners();
   updateUI();
 });

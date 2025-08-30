@@ -289,3 +289,48 @@ function addStopToList(properties, color) {
   // Implementar lógica para añadir parada a la lista
   console.log(`Añadiendo parada a la lista: ${properties.id}`);
 }
+
+// Mostrar ubicación en tiempo real
+function enableUserLocation() {
+  if (!map) return;
+
+  // Usar la API de Geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Si ya existe el marcador, actualizar su posición
+        if (window.userMarker) {
+          window.userMarker.setLatLng([lat, lng]);
+        } else {
+          // Crear un marcador para la ubicación del usuario
+          window.userMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+              className: 'user-location',
+              html: `<div style="background-color:#3498db; width:20px; height:20px; border-radius:50%; border:2px solid yellow; box-shadow:0 0 6px rgba(186, 34, 158, 0.5);"></div>`,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).addTo(map);
+
+          // Hacer zoom a la ubicación la primera vez
+          map.setView([lat, lng], 15);
+        }
+      },
+      function(error) {
+        console.error("Error al obtener ubicación:", error);
+        alert("No se pudo obtener tu ubicación.");
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000
+      }
+    );
+  } else {
+    alert("La geolocalización no es soportada en este navegador.");
+  }
+}
+
