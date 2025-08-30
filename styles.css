@@ -176,8 +176,9 @@ body {
 
 .tab-content {
   display: none;
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
+  min-height: 50%;
 }
 
 .tab-content.active {
@@ -244,38 +245,6 @@ body {
   font-size: 0.85rem;
   color: #666;
   margin-bottom: 0.3rem;
-}
-
-.legend {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: white;
-  padding: 10px;
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-}
-
-.legend h4 {
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.legend-color {
-  width: 20px;
-  height: 10px;
-  margin-right: 5px;
-}
-
-.legend-label {
-  font-size: 0.8rem;
 }
 
 .stats-panel {
@@ -366,3 +335,32 @@ body {
     flex-direction: column;
   }
 }
+
+
+/* Estilos para el selector de rutas */
+.route-select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.route-select:focus {
+  outline: none;
+  border-color: #2c5aa0;
+  box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.2);
+}
+
+.route-select option {
+  padding: 0.5rem;
+}
+
+.route-selector {
+  display: none;
+}
+

@@ -6,7 +6,7 @@ function addStopToList(properties, color) {
   stopItem.dataset.id = properties.id;
   stopItem.dataset.route = properties.routeId;
   
-  // Solo mostrar Parada #, Ruta e ID
+  // Mostrar Parada #
   stopItem.innerHTML = `
     <h4><i class="fas fa-map-marker-alt"></i> Parada #${properties.sequence}</h4>
     <p><strong>Ruta:</strong> ${properties.routeId}</p>

@@ -11,27 +11,35 @@ let allStopLayers = [];  // Almacenar todas las capas de paradas
 function initMap() {
   map = L.map('map').setView([19.54, -96.91], 13);
   
-  // Capas base
+  // Configuración de capas base
   baseLayers = {
-    "Standard": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }),
-    "Satélite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-    }),
-    "Oscuro": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    })
+    "Standard": createTileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      '&copy; OpenStreetMap contributors'
+    ),
+    "Satélite": createTileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    ),
+    "Oscuro": createTileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      '&copy; OpenStreetMap contributors &copy; CARTO'
+    )
   };
   
   // Añadir capa base por defecto
-  baseLayers["Standard"].addTo(map);
+  baseLayers.Standard.addTo(map);
 }
 
-// Iconos para las paradas
+// Función auxiliar para crear capas de teselas
+function createTileLayer(url, attribution) {
+  return L.tileLayer(url, {
+    maxZoom: 19,
+    attribution: attribution
+  });
+}
+
+// Crear icono para las paradas
 function createStopIcon(color) {
   return L.divIcon({
     className: 'stop-icon',
@@ -44,79 +52,67 @@ function createStopIcon(color) {
 // Cargar y mostrar rutas
 function loadRoutes() {
   // Limpiar rutas existentes
-  routeLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(routeLayers);
   routeLayers = [];
   allRouteLayers = [];
   
-  // Limpiar leyenda
-  const legendItems = document.getElementById('legend-items');
-  legendItems.innerHTML = '';
-  
   // Añadir las rutas al mapa
   window.routesData.features.forEach(feature => {
-    const routeLayer = L.geoJSON(feature, {
-      style: {
-        color: feature.properties.color,
-        weight: 4,
-        opacity: 0.8
-      },
-      onEachFeature: function (feature, layer) {
-        let info = `
-          <div style="min-width: 200px;">
-            <h3 style="margin: 0 0 10px 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-              ${feature.properties.name}
-            </h3>
-            <p><strong>Descripción:</strong> ${feature.properties.desc}</p>
-            <p><strong>Notas:</strong> ${feature.properties.notes}</p>
-            <p><strong>Horario Pico AM:</strong> ${feature.properties.peak_am} unidades</p>
-            <p><strong>Mediodía:</strong> ${feature.properties.midday} unidades</p>
-            <p><strong>Horario Pico PM:</strong> ${feature.properties.peak_pm} unidades</p>
-            <p><strong>Noche:</strong> ${feature.properties.night} unidades</p>
-          </div>
-        `;
-        layer.bindPopup(info);
-      }
-    });
+    const routeLayer = createRouteLayer(feature);
     
     // Guardar referencia a la capa
     allRouteLayers.push({
       id: feature.properties.id,
       layer: routeLayer
     });
-    
-    // Añadir a la leyenda
-    const legendItem = document.createElement('div');
-    legendItem.className = 'legend-item';
-    legendItem.innerHTML = `
-      <span class="legend-color" style="background: ${feature.properties.color};"></span>
-      <span class="legend-label">${feature.properties.name}</span>
-    `;
-    legendItems.appendChild(legendItem);
   });
-  
-  // Añadir elemento de leyenda para paradas
-  const stopsLegendItem = document.createElement('div');
-  stopsLegendItem.className = 'legend-item';
-  stopsLegendItem.innerHTML = `
-    <span class="legend-color" style="background: #f39c12;"></span>
-    <span class="legend-label">Paradas</span>
-  `;
-  legendItems.appendChild(stopsLegendItem);
   
   // Mostrar todas las rutas inicialmente
   showAllRoutes();
   
   // Ajustar el mapa para mostrar todas las rutas
   if (allRouteLayers.length > 0) {
-    const group = new L.featureGroup(allRouteLayers.map(r => r.layer));
+    const group = L.featureGroup(allRouteLayers.map(r => r.layer));
     map.fitBounds(group.getBounds());
   }
+}
+
+// Crear capa de ruta
+function createRouteLayer(feature) {
+  return L.geoJSON(feature, {
+    style: {
+      color: feature.properties.color,
+      weight: 4,
+      opacity: 0.8
+    },
+    onEachFeature: (feature, layer) => {
+      layer.bindPopup(createRoutePopupContent(feature));
+    }
+  });
+}
+
+// Crear contenido para el popup de ruta
+function createRoutePopupContent(feature) {
+  const props = feature.properties;
+  return `
+    <div style="min-width: 200px;">
+      <h3 style="margin: 0 0 10px 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+        ${props.name}
+      </h3>
+      <p><strong>Descripción:</strong> ${props.desc}</p>
+      <p><strong>Notas:</strong> ${props.notes}</p>
+      <p><strong>Horario Pico AM:</strong> ${props.peak_am} unidades</p>
+      <p><strong>Mediodía:</strong> ${props.midday} unidades</p>
+      <p><strong>Horario Pico PM:</strong> ${props.peak_pm} unidades</p>
+      <p><strong>Noche:</strong> ${props.night} unidades</p>
+    </div>
+  `;
 }
 
 // Mostrar todas las rutas
 function showAllRoutes() {
   // Limpiar rutas actuales
-  routeLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(routeLayers);
   routeLayers = [];
   
   // Añadir todas las rutas
@@ -129,7 +125,7 @@ function showAllRoutes() {
 // Mostrar solo una ruta específica
 function showSingleRoute(routeId) {
   // Limpiar rutas actuales
-  routeLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(routeLayers);
   routeLayers = [];
   
   // Encontrar y mostrar la ruta específica
@@ -144,7 +140,7 @@ function showSingleRoute(routeId) {
 // Cargar y mostrar paradas
 function loadStops() {
   // Limpiar paradas existentes
-  stopLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(stopLayers);
   stopLayers = [];
   allStopLayers = [];
   
@@ -160,22 +156,7 @@ function loadStops() {
     const color = route ? route.properties.color : '#f39c12';
     
     // Crear marcador para la parada
-    const marker = L.marker(
-      [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],
-      { icon: createStopIcon(color) }
-    );
-    
-    // Información específica para el popup (solo Parada #, Ruta e ID)
-    let info = `
-      <div style="min-width: 180px; padding: 10px;">
-        <h3 style="margin: 0 0 12px 0; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; text-align: center;">
-          Parada #${stop.properties.sequence}
-        </h3>
-        <p style="margin: 8px 0; font-size: 14px;"><strong style="color: #2c5aa0;">Ruta:</strong> ${routeId}</p>
-        <p style="margin: 8px 0; font-size: 14px;"><strong style="color: #2c5aa0;">ID:</strong> ${stop.properties.id}</p>
-      </div>
-    `;
-    marker.bindPopup(info);
+    const marker = createStopMarker(stop, color);
     
     // Guardar referencia a la capa
     allStopLayers.push({
@@ -190,19 +171,37 @@ function loadStops() {
     addStopToList(stop.properties, color);
     
     // Evento para resaltar la parada al hacer clic
-    marker.on('click', function() {
-      highlightStop(stop.properties.id);
-    });
+    marker.on('click', () => highlightStop(stop.properties.id));
   });
   
   // Mostrar todas las paradas inicialmente
   showAllStops();
 }
 
+// Crear marcador de parada
+function createStopMarker(stop, color) {
+  const marker = L.marker(
+    [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],
+    { icon: createStopIcon(color) }
+  );
+  
+  // Información específica para el popup (solo Parada #, Ruta e ID)
+  const info = `
+    <div style="min-width: 180px; padding: 10px;">
+      <h3 style="margin: 0 0 12px 0; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; text-align: center;">
+        Parada #${stop.properties.sequence}
+      </h3>
+    </div>
+  `;
+  
+  marker.bindPopup(info);
+  return marker;
+}
+
 // Mostrar todas las paradas
 function showAllStops() {
   // Limpiar paradas actuales
-  stopLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(stopLayers);
   stopLayers = [];
   
   // Añadir todas las paradas
@@ -215,7 +214,7 @@ function showAllStops() {
 // Mostrar solo las paradas de una ruta específica
 function showSingleRouteStops(routeId) {
   // Limpiar paradas actuales
-  stopLayers.forEach(layer => map.removeLayer(layer));
+  clearLayers(stopLayers);
   stopLayers = [];
   
   // Encontrar y mostrar solo las paradas de la ruta específica
@@ -227,12 +226,17 @@ function showSingleRouteStops(routeId) {
   });
 }
 
+// Función auxiliar para limpiar capas
+function clearLayers(layers) {
+  layers.forEach(layer => map.removeLayer(layer));
+}
+
 // Cambiar estilo del mapa
 function changeMapStyle(style) {
   // Remover todas las capas base
-  for (const layer of Object.values(baseLayers)) {
+  Object.values(baseLayers).forEach(layer => {
     map.removeLayer(layer);
-  }
+  });
   
   // Añadir la capa seleccionada
   baseLayers[style].addTo(map);
@@ -241,18 +245,22 @@ function changeMapStyle(style) {
   document.querySelectorAll('.style-button').forEach(btn => {
     btn.classList.remove('active');
   });
-  document.getElementById(`style-${style.toLowerCase()}`).classList.add('active');
+  
+  const styleButton = document.getElementById(`style-${style.toLowerCase()}`);
+  if (styleButton) {
+    styleButton.classList.add('active');
+  }
 }
 
 // Seleccionar ruta
 function selectRoute(routeId) {
   selectedRoute = routeId;
   
-  // Actualizar botones activos
-  document.querySelectorAll('.route-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  document.querySelector(`.route-btn[data-route="${routeId}"]`).classList.add('active');
+  // Actualizar el selector para reflejar la selección
+  const routeSelect = document.getElementById('route-select');
+  if (routeSelect) {
+    routeSelect.value = routeId;
+  }
   
   // Mostrar u ocultar rutas y paradas según la selección
   if (routeId === 'all') {
@@ -261,11 +269,23 @@ function selectRoute(routeId) {
     
     // Ajustar el mapa para mostrar todas las rutas
     if (allRouteLayers.length > 0) {
-      const group = new L.featureGroup(allRouteLayers.map(r => r.layer));
+      const group = L.featureGroup(allRouteLayers.map(r => r.layer));
       map.fitBounds(group.getBounds());
     }
   } else {
     showSingleRoute(routeId);
     showSingleRouteStops(routeId);
   }
+}
+
+// Resaltar parada (función pendiente de implementación)
+function highlightStop(stopId) {
+  // Implementar lógica para resaltar parada
+  console.log(`Resaltando parada: ${stopId}`);
+}
+
+// Añadir parada a la lista (función pendiente de implementación)
+function addStopToList(properties, color) {
+  // Implementar lógica para añadir parada a la lista
+  console.log(`Añadiendo parada a la lista: ${properties.id}`);
 }
