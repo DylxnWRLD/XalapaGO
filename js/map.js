@@ -255,14 +255,14 @@ function changeMapStyle(style) {
 // Seleccionar ruta
 function selectRoute(routeId) {
   selectedRoute = routeId;
-  
+
   // Actualizar el selector para reflejar la selección
   const routeSelect = document.getElementById('route-select');
   if (routeSelect) {
     routeSelect.value = routeId;
   }
-  
-  // Mostrar u ocultar rutas y paradas según la selección
+
+  // Mostrar u ocultar rutas según la selección
   if (routeId === 'all') {
     showAllRoutes();
     showAllStops();
@@ -276,20 +276,75 @@ function selectRoute(routeId) {
     showSingleRoute(routeId);
     showSingleRouteStops(routeId);
   }
+
+  // Actualizar lista de paradas del panel lateral
+  updateStopsList(routeId);
 }
 
-// Resaltar parada (función pendiente de implementación)
-function highlightStop(stopId) {
-  // Implementar lógica para resaltar parada
-  console.log(`Resaltando parada: ${stopId}`);
+// Actualizar lista de paradas en el panel lateral según la ruta seleccionada
+function updateStopsList(routeId) {
+  const stopsContainer = document.getElementById('stops-container');
+  stopsContainer.innerHTML = ''; // Limpiar lista
+
+  let stopsToShow = allStopLayers;
+
+  if (routeId !== 'all') {
+    stopsToShow = allStopLayers.filter(stop => stop.routeId === routeId);
+  }
+
+  stopsToShow.forEach(stop => {
+    const routeColor = window.routesData.features.find(r => r.properties.id === stop.routeId)?.properties.color ?? '#f39c12';
+    addStopToList(stop.properties, routeColor);
+  });
 }
 
-// Añadir parada a la lista (función pendiente de implementación)
+// Añadir parada a la lista del panel lateral
 function addStopToList(properties, color) {
-  // Implementar lógica para añadir parada a la lista
-  console.log(`Añadiendo parada a la lista: ${properties.id}`);
+  const stopsContainer = document.getElementById('stops-container');
+  const stopItem = document.createElement('div');
+  stopItem.className = 'stop-item';
+  stopItem.dataset.id = properties.id;
+  stopItem.dataset.route = properties.routeId;
+
+  stopItem.innerHTML = `
+    <h4><i class="fas fa-map-marker-alt"></i> Parada #${properties.sequence}</h4>
+    <p><strong>Ruta:</strong> ${properties.routeId}</p>
+    <p><strong>ID:</strong> ${properties.id}</p>
+  `;
+
+  stopItem.addEventListener('click', function() {
+    highlightStop(properties.id);
+    const stopLayer = allStopLayers.find(s => s.id === properties.id);
+    if (stopLayer) {
+      map.setView(stopLayer.marker.getLatLng(), 16);
+      stopLayer.marker.openPopup();
+    }
+  });
+
+  stopsContainer.appendChild(stopItem);
 }
 
+// Resaltar parada seleccionada
+function highlightStop(stopId) {
+  // Restablecer todas las paradas
+  allStopLayers.forEach(stop => {
+    const route = window.routesData.features.find(r => r.properties.id === stop.routeId);
+    const color = route ? route.properties.color : '#f39c12';
+    stop.marker.setIcon(createStopIcon(color));
+  });
+
+  document.querySelectorAll('.stop-item').forEach(item => {
+    item.style.backgroundColor = 'white';
+  });
+
+  // Resaltar la parada seleccionada
+  const selected = allStopLayers.find(stop => stop.id === stopId);
+  if (selected) {
+    selected.marker.setIcon(createStopIcon('#2ecc71'));
+    const selectedItem = document.querySelector(`.stop-item[data-id="${stopId}"]`);
+    if (selectedItem) selectedItem.style.backgroundColor = '#f0f7ff';
+  }
+}
 // Mostrar ubicación en tiempo real
 function enableUserLocation() {
   if (!map) return;

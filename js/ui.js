@@ -68,6 +68,8 @@ function highlightStop(stopId) {
   }
 }
 
+
+
 // Filtrar paradas
 function filterStops() {
   const searchText = document.getElementById('search-stop').value.toLowerCase();
