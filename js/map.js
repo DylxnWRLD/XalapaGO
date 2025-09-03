@@ -350,42 +350,64 @@ function enableUserLocation() {
   if (!map) return;
 
   // Usar la API de Geolocation
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-      function(position) {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+if (navigator.geolocation) {
+  navigator.geolocation.watchPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
-        // Si ya existe el marcador, actualizar su posición
-        if (window.userMarker) {
-          window.userMarker.setLatLng([lat, lng]);
-        } else {
-          // Crear un marcador para la ubicación del usuario
-          window.userMarker = L.marker([lat, lng], {
-            icon: L.divIcon({
-              className: 'user-location',
-              html: `<div style="background-color:#3498db; width:20px; height:20px; border-radius:50%; border:2px solid yellow; box-shadow:0 0 6px rgba(186, 34, 158, 0.5);"></div>`,
-              iconSize: [16, 16],
-              iconAnchor: [8, 8]
-            })
-          }).addTo(map);
+      // Si ya existe el marcador, actualizar su posición
+      if (window.userMarker) {
+        window.userMarker.setLatLng([lat, lng]);
+      } else {
+        // Crear un marcador para la ubicación del usuario
+        window.userMarker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'user-location',
+            html: `
+              <div style="
+                position: relative;
+                width: 26px;
+                height: 26px;
+                background-color: #e74c3c;
+                border: 2px solid black;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+              ">
+                <div style="
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%) rotate(45deg);
+                  width: 10px;
+                  height: 10px;
+                  background: black;
+                  border-radius: 50%;
+                "></div>
+              </div>
+            `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24] // ancla en la punta del pin
+          })
+        }).addTo(map);
 
-          // Hacer zoom a la ubicación la primera vez
-          map.setView([lat, lng], 15);
-        }
-      },
-      function(error) {
-        console.error("Error al obtener ubicación:", error);
-        alert("No se pudo obtener tu ubicación.");
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000
+        // Hacer zoom a la ubicación la primera vez
+        map.setView([lat, lng], 15);
       }
-    );
-  } else {
-    alert("La geolocalización no es soportada en este navegador.");
-  }
+    },
+    function(error) {
+      console.error("Error al obtener ubicación:", error);
+      alert("No se pudo obtener tu ubicación.");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 5000
+    }
+  );
+} else {
+  alert("La geolocalización no es soportada en este navegador.");
+}
 }
 
