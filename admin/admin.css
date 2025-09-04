@@ -1,0 +1,99 @@
+/* Reset básico */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+/* Encabezado */
+h1 {
+    height: 10vh;
+    background-color: #1e3c72;
+    color: white;
+    padding: 5px;
+    margin: 0;
+    line-height: 10vh;
+    text-align: center;
+}
+
+h2{
+    background-color: #1e3c72;
+    height: 2vh;
+    padding: 5px;
+}
+
+/* Contenedor principal debajo del header */
+#main {
+    display: flex;
+    flex-direction: row;
+    height: 80vh; /* lo que queda después del header */
+}
+
+/* Sidebar */
+#sidebar {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: #f4f4f4;
+    border-right: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Contenedor de botones fijo */
+#botonesSidebar {
+    flex: 0 0 auto; /* ocupa solo el espacio que necesite */
+}
+
+/* Contenedor de rutas con scroll */
+#rutasSidebar {
+    flex: 1 1 auto; /* ocupa el resto del espacio */
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+/* Titulo y lista */
+#rutasSidebar h3 {
+    margin-top: 0;
+}
+
+#listaRutas {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+
+#listaRutas li {
+    padding: 5px;
+    cursor: pointer;
+}
+
+#listaRutas li.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Botones */
+button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    background: #1e3c72;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+/* Mapa */
+#map {
+    flex: 1; /* ocupa todo el espacio restante */
+    min-height: 100%;
+}

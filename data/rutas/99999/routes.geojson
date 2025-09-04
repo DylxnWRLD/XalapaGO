@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14010000",
+        "name": "Ruta 99999",
+        "desc": "",
+        "notes": null,
+        "peak_am": 10,
+        "midday": 10,
+        "peak_pm": 10,
+        "night": 10
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -96.930549,
+            19.537059
+          ],
+          [
+            -96.930163,
+            19.542441
+          ],
+          [
+            -96.929691,
+            19.54762
+          ]
+        ]
+      }
+    }
+  ]
+}
