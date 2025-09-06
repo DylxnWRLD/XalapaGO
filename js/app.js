@@ -174,3 +174,21 @@ function updateStats() {
   updateElement('stats-total-routes', totalRoutes);
   updateElement('stats-total-stops', totalStops);
 }
+
+// --- Manejo de login local ---
+const authArea = document.getElementById("auth-area");
+const usuario = localStorage.getItem("usuario");
+
+if (usuario && authArea) {
+  authArea.innerHTML = `
+    <div class="user-info">
+      <span>👤 ${usuario}</span>
+      <button onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  `;
+}
+
+function cerrarSesion() {
+  localStorage.removeItem("usuario");
+  window.location.reload();
+}
