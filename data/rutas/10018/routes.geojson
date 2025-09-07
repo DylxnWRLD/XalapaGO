@@ -1,6 +1,6 @@
 {"type":"FeatureCollection",
 "features":[
-{"type":"Feature", "properties":{"id": 4275563, "name": "ruta-10018","PRINFIN":null,"DSENTIDO":null},
+{"type":"Feature", "properties":{"id": 4275563, "name": "10018", "image": "bus10018.jpg", "PRINFIN":null,"DSENTIDO":null},
 "geometry":{"type":"LineString","coordinates":[[-96.93910424346029,19.52167030230766],[-96.93879536431282,19.522118705429914]]}},
 {"type":"Feature","properties":{"ID":4272638,"PRINFIN":null,"DSENTIDO":null},
 "geometry":{"type":"LineString","coordinates":[[-96.87172904335023,19.509989004238577],[-96.872076510845,19.510170269794514],[-96.87241399824514,19.510396769730256]]}},
