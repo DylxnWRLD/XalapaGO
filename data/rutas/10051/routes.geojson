@@ -5,8 +5,9 @@
             "type": "Feature",
             "properties": {
                 "id": "13930360",
-                "name": "Ruta 10001",
+                "name": "10051",
                 "desc": "Articulo 3ro - Lázaro Cárdenas - Trancas - La Pradera - Las Haciendas",
+                "image": "bus51.jpg",
                 "notes": null,
                 "peak_am": 10,
                 "midday": 10,

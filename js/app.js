@@ -140,14 +140,18 @@ function addRouteToList(properties) {
   const routeItem = document.createElement('div');
   routeItem.className = 'route-item';
   routeItem.dataset.id = properties.id;
-  
+
   routeItem.innerHTML = `
     <h4><i class="fas fa-route"></i> ${properties.name}</h4>
+    <p>
+      <strong>Imagen:</strong><br>
+      ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
+    </p>
     <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
     <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
     <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
   `;
-  
+
   routeItem.addEventListener('click', () => selectRoute(properties.id));
   routesContainer.appendChild(routeItem);
 }
@@ -169,4 +173,22 @@ function updateStats() {
   updateElement('info-total-stops', totalStops);
   updateElement('stats-total-routes', totalRoutes);
   updateElement('stats-total-stops', totalStops);
+}
+
+// --- Manejo de login local ---
+const authArea = document.getElementById("auth-area");
+const usuario = localStorage.getItem("usuario");
+
+if (usuario && authArea) {
+  authArea.innerHTML = `
+    <div class="user-info">
+      <span>👤 ${usuario}</span>
+      <button onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  `;
+}
+
+function cerrarSesion() {
+  localStorage.removeItem("usuario");
+  window.location.reload();
 }
