@@ -4,8 +4,9 @@
 		"type": "Feature",
 		"properties": {
 			"id": "13920253",
-			"name": "Ruta 10061",
+			"name": "10061",
 			"desc": "mercado terminal",
+			"image": "bus61.jpg",
 			"notes": "Terminal - Mercado - Sumidero",
 			"peak_am": 10,
 			"midday": 10,
