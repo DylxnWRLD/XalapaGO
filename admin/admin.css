@@ -19,9 +19,14 @@ h1 {
 }
 
 h2{
-    background-color: #1e3c72;
-    height: 2vh;
-    padding: 5px;
+   font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #2c5aa0;
+  border-bottom: 3px solid #090909;
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: left;
+  gap: 5px;;
 }
 
 /* Contenedor principal debajo del header */

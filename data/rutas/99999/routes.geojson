@@ -6,8 +6,9 @@
       "properties": {
         "id": "14010000",
         "name": "Ruta 99999",
-        "desc": "",
-        "notes": null,
+        "desc": "Avenida de las Américas",
+        "image": "vitor.jpg",
+        "notes": "",
         "peak_am": 10,
         "midday": 10,
         "peak_pm": 10,
@@ -17,16 +18,12 @@
         "type": "LineString",
         "coordinates": [
           [
-            -96.930549,
-            19.537059
+            -96.922395,
+            19.541146
           ],
           [
-            -96.930163,
-            19.542441
-          ],
-          [
-            -96.929691,
-            19.54762
+            -96.908298,
+            19.53368
           ]
         ]
       }

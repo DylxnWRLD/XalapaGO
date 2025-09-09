@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // --- Inicialización del mapa ---
     const map = L.map('map').setView([19.54, -96.91], 13);
     map.invalidateSize();
 
@@ -9,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let drawnItems = new L.FeatureGroup().addTo(map);
 
+    // --- Configuración de Leaflet Draw ---
     let drawControl = new L.Control.Draw({
         edit: { featureGroup: drawnItems },
         draw: {
@@ -21,34 +23,36 @@ document.addEventListener("DOMContentLoaded", () => {
             circle: false,
             circlemarker: false,
             marker: {
-                shapeOptions: {color: 'blue'},
-                title: "Agregar parada" 
+                shapeOptions: { color: 'blue' },
+                title: "Agregar parada"
             }
         }
     });
 
     map.addControl(drawControl);
 
-    // Contadores para IDs
+    // --- Variables de control ---
     let nextRouteId = 14010000;
     let nextStopId = 14020000;
-
     let rutas = [];
     let rutaSeleccionada = null;
     let stopsSequence = 0;
 
-    // ---------------- DIBUJO ----------------
+    // --- Manejo de eventos de dibujo ---
     map.on(L.Draw.Event.CREATED, e => {
         const layer = e.layer;
 
+        // Para rutas (polilíneas)
         if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
-            // Ruta
+            let descripcion = prompt("Descripción de la ruta (opcional):");
+
             layer.feature = {
                 type: "Feature",
                 properties: {
                     id: (nextRouteId++).toString(),
                     name: `Ruta ${rutaSeleccionada}`,
-                    desc: "",
+                    desc: descripcion || "", 
+                    image: null,
                     notes: null,
                     peak_am: 10,
                     midday: 10,
@@ -62,8 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
+        // Si es un marcador (parada)
         if (layer instanceof L.Marker) {
-            // Parada
             if (!rutaSeleccionada) {
                 alert("Selecciona una ruta antes de colocar paradas");
                 return;
@@ -91,10 +95,16 @@ document.addEventListener("DOMContentLoaded", () => {
         drawnItems.addLayer(layer);
     });
 
+    // Eventos de edición y eliminación (solo logueo en consola)
     map.on(L.Draw.Event.EDITED, e => e.layers.eachLayer(layer => console.log("Editado:", layer)));
     map.on(L.Draw.Event.DELETED, e => e.layers.eachLayer(layer => console.log("Eliminado:", layer)));
 
     // ---------------- RUTAS ----------------
+
+    /**
+     * Carga el archivo index.json con la lista de rutas disponibles
+     * y actualiza la lista visible en el DOM.
+     */
     async function cargarIndex() {
         try {
             const res = await fetch("/data/rutas/index.json");
@@ -105,6 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /**
+     * Muestra en la página la lista de rutas disponibles.
+     * Marca la ruta seleccionada y permite seleccionar otra al hacer click.
+     */
     function mostrarListaRutas() {
         const ul = document.getElementById("listaRutas");
         ul.innerHTML = "";
@@ -117,6 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /**
+     * Carga los archivos GeoJSON de rutas y paradas de la ruta seleccionada.
+     * Limpia el mapa y reinicia la secuencia de paradas.
+     */
     async function cargarRutaSeleccionada(carpeta) {
         rutaSeleccionada = carpeta;
         drawnItems.clearLayers();
@@ -126,6 +144,9 @@ document.addEventListener("DOMContentLoaded", () => {
         await cargarRuta(`/data/rutas/${carpeta}/stops.geojson`);
     }
 
+    /**
+     * Carga un archivo GeoJSON y agrega sus elementos al mapa.
+     */
     async function cargarRuta(archivo) {
         try {
             const res = await fetch(archivo);
@@ -137,6 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ---------------- BOTONES ----------------
+
+    /**
+     * Crea una nueva ruta pidiendo un nombre al usuario.
+     * Valida que no exista previamente y limpia el mapa para comenzar a dibujar.
+     */
     document.getElementById("nuevaRuta").addEventListener("click", () => {
         const nombre = prompt("Nombre de la nueva ruta (ej: 10004)");
         if (!nombre) return;
@@ -148,6 +174,10 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarListaRutas();
     });
 
+    /**
+     * Elimina la ruta seleccionada después de confirmación del usuario.
+     * Limpia el mapa y la lista de rutas.
+     */
     document.getElementById("eliminarRuta").addEventListener("click", () => {
         if (!rutaSeleccionada) return alert("Selecciona una ruta primero");
         if (!confirm(`Se eliminará la ruta ${rutaSeleccionada}. ¿Continuar?`)) return;
@@ -158,31 +188,30 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarListaRutas();
     });
 
+    /**
+     * Descarga las rutas y paradas como archivos GeoJSON separados.
+     * Filtra los elementos por tipo de geometría.
+     */
     document.getElementById("downloadGeoJSON").addEventListener("click", () => {
         if (!rutaSeleccionada) return alert("Selecciona una ruta primero");
 
         const geojson = drawnItems.toGeoJSON();
 
-        // Rutas
         const rutasGeoJSON = {
             type: "FeatureCollection",
             features: geojson.features.filter(f => f.geometry.type === "LineString")
         };
-
-        // Paradas
         const paradasGeoJSON = {
             type: "FeatureCollection",
             features: geojson.features.filter(f => f.geometry.type === "Point")
         };
 
-        // Descargar rutas
         const blobRutas = new Blob([JSON.stringify(rutasGeoJSON, null, 2)], { type: "application/json" });
         const aRutas = document.createElement("a");
         aRutas.href = URL.createObjectURL(blobRutas);
         aRutas.download = "routes.geojson";
         aRutas.click();
 
-        // Descargar paradas
         const blobParadas = new Blob([JSON.stringify(paradasGeoJSON, null, 2)], { type: "application/json" });
         const aParadas = document.createElement("a");
         aParadas.href = URL.createObjectURL(blobParadas);
@@ -190,5 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
         aParadas.click();
     });
 
+    // Carga inicial del índice de rutas
     cargarIndex();
 });
