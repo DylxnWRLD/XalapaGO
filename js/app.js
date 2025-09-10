@@ -4,11 +4,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   initMap();
   enableUserLocation();
   setupEventListeners();
+  setupSearchFunctionality();
+  clearHighlightedStops();
   updateUI();
 });
 
 // Variables globales
 let availableRoutes = [];
+let searchProximityCircle = null;
+let highlightedStops = [];
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
   defaultZoom: 13,
@@ -80,7 +84,6 @@ function assignRouteColors() {
 
 // Configurar event listeners
 function setupEventListeners() {
-  document.getElementById('search-stop').addEventListener('input', filterStops);
   
   document.getElementById('style-default').addEventListener('click', () => changeMapStyle('Standard'));
   document.getElementById('style-satellite').addEventListener('click', () => changeMapStyle('Satélite'));
@@ -191,4 +194,306 @@ if (usuario && authArea) {
 function cerrarSesion() {
   localStorage.removeItem("usuario");
   window.location.reload();
+}
+
+// Función para buscar lugares y filtrar rutas
+function setupSearchFunctionality() {
+  const searchInput = document.getElementById('search-place');
+  const searchButton = document.getElementById('search-button');
+  
+  // Evento para el botón de búsqueda
+  searchButton.addEventListener('click', performSearch);
+  
+  // Evento para la tecla Enter en el input
+  searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+}
+
+// Realizar la búsqueda
+async function performSearch() {
+  const searchTerm = document.getElementById('search-place').value.trim();
+  
+  if (!searchTerm) {
+    alert('Por favor, ingresa un lugar para buscar');
+    return;
+  }
+  
+  try {
+    // Primero intentamos geocodificar el término de búsqueda
+    const location = await geocodeSearchTerm(searchTerm);
+    
+    if (location) {
+      // Centrar el mapa en la ubicación encontrada
+      map.setView([location.lat, location.lng], 16);
+      
+      // Buscar rutas cercanas a esta ubicación
+      findRoutesNearLocation(location);
+    } else {
+      // Si no se encuentra la ubicación, buscar en nombres de rutas y descripciones
+      searchInRouteData(searchTerm);
+    }
+  } catch (error) {
+    console.error('Error en la búsqueda:', error);
+    alert('Error al realizar la búsqueda. Intenta con otro término.');
+  }
+}
+
+// Geocodificar el término de búsqueda usando Nominatim (OpenStreetMap)
+async function geocodeSearchTerm(searchTerm) {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm + ', Xalapa, Veracruz')}&limit=1`);
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+        displayName: data[0].display_name
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error en geocodificación:', error);
+    return null;
+  }
+}
+
+// Encontrar rutas cercanas a una ubicación
+function findRoutesNearLocation(location) {
+  const searchTerm = document.getElementById('search-place').value.trim();
+  const proximityThreshold = 500; // metros
+  
+  // Resaltar paradas en el rango
+  highlightStopsInRange(location, proximityThreshold);
+  
+  // Encontrar paradas cercanas
+  const nearbyStops = allStopLayers.filter(stop => {
+    const distance = calculateDistance(
+      location.lat, location.lng,
+      stop.coordinates[0], stop.coordinates[1]
+    );
+    return distance <= proximityThreshold;
+  });
+  
+  // Obtener IDs de rutas únicas de las paradas cercanas
+  const nearbyRouteIds = [...new Set(nearbyStops.map(stop => stop.routeId))];
+  
+  if (nearbyRouteIds.length > 0) {
+    // Mostrar las rutas cercanas
+    showSearchResults(nearbyRouteIds, `Rutas cerca de: ${location.displayName || 'tu búsqueda'}`);
+  } else {
+    // Si no hay rutas cercanas, buscar en los datos de las rutas
+    searchInRouteData(searchTerm);
+    alert('No se encontraron rutas cercanas a este lugar. Mostrando resultados relacionados.');
+  }
+}
+
+// Buscar en los datos de las rutas (nombres, descripciones)
+function searchInRouteData(searchTerm) {
+  const term = searchTerm.toLowerCase();
+  const matchingRoutes = [];
+  
+  // Buscar en nombres y descripciones de rutas
+  window.routesData.features.forEach(feature => {
+    const props = feature.properties;
+    const nameMatch = props.name && props.name.toLowerCase().includes(term);
+    const descMatch = props.desc && props.desc.toLowerCase().includes(term);
+    
+    if (nameMatch || descMatch) {
+      matchingRoutes.push(props.id);
+    }
+  });
+  
+  if (matchingRoutes.length > 0) {
+    showSearchResults(matchingRoutes, `Rutas relacionadas con: ${searchTerm}`);
+  } else {
+    alert('No se encontraron rutas relacionadas con tu búsqueda.');
+    // Mostrar todas las rutas si no hay resultados
+    selectRoute('all');
+  }
+}
+
+// Mostrar resultados de búsqueda
+function showSearchResults(routeIds, title) {
+  // Crear un elemento para mostrar el título de los resultados
+  const routesContainer = document.getElementById('routes-container');
+  routesContainer.innerHTML = '';
+  
+  const resultsHeader = document.createElement('div');
+  resultsHeader.className = 'search-results-header';
+  resultsHeader.innerHTML = `
+    <h3>${title}</h3>
+    <button id="clear-search" class="clear-search-btn">
+      <i class="fas fa-times"></i> Limpiar búsqueda
+    </button>
+  `;
+  routesContainer.appendChild(resultsHeader);
+  
+  // Añadir evento para limpiar búsqueda
+  document.getElementById('clear-search').addEventListener('click', () => {
+    document.getElementById('search-place').value = '';
+    populateRoutesList();
+    selectRoute('all');
+  });
+  
+  // Mostrar solo las rutas que coinciden
+  window.routesData.features.forEach(feature => {
+    if (routeIds.includes(feature.properties.id)) {
+      addRouteToList(feature.properties);
+    }
+  });
+  
+  // Seleccionar la primera ruta de los resultados o mostrar todas
+  if (routeIds.length > 0) {
+    selectRoute(routeIds[0]);
+  }
+}
+
+
+ //Resalta las paradas dentro de un radio específico de una ubicación
+function highlightStopsInRange(location, radius = 500) {
+  // Limpiar resaltados anteriores
+  clearHighlightedStops();
+  
+  // Crear o actualizar el círculo de proximidad de búsqueda
+  updateSearchProximityCircle(location, radius);
+  
+  // Encontrar y resaltar paradas dentro del rango
+  const stopsInRange = allStopLayers.filter(stop => {
+    const distance = calculateDistance(
+      location.lat, location.lng,
+      stop.coordinates[0], stop.coordinates[1]
+    );
+    return distance <= radius;
+  });
+  
+  // Resaltar las paradas encontradas
+  stopsInRange.forEach(stop => {
+    // Cambiar el icono a uno resaltado
+    const highlightIcon = createHighlightedStopIcon('#e74c3c');
+    stop.marker.setIcon(highlightIcon);
+    
+    // Añadir a la lista de paradas resaltadas
+    highlightedStops.push(stop);
+    
+    // Abrir popup para la parada más cercana
+    if (stopsInRange.length > 0) {
+      const closestStop = stopsInRange.reduce((prev, curr) => {
+        const prevDist = calculateDistance(location.lat, location.lng, prev.coordinates[0], prev.coordinates[1]);
+        const currDist = calculateDistance(location.lat, location.lng, curr.coordinates[0], curr.coordinates[1]);
+        return prevDist < currDist ? prev : curr;
+      });
+      
+      closestStop.marker.openPopup();
+    }
+  });
+  
+  // También resaltar en la lista del panel lateral
+  highlightStopsInList(stopsInRange.map(stop => stop.id));
+}
+
+
+//Crea un icono resaltado para paradas
+function createHighlightedStopIcon(color) {
+  return L.divIcon({
+    className: 'highlighted-stop-icon',
+    html: `
+      <div style="
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      ">
+        <div style="
+          background-color: ${color};
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 0 0 3px ${color}, 0 0 10px rgba(0,0,0,0.5);
+          animation: pulse 1.5s infinite;
+        "></div>
+      </div>
+      <style>
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+      </style>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+}
+
+
+//Actualiza el círculo de proximidad de búsqueda
+function updateSearchProximityCircle(location, radius) {
+  // Eliminar círculo anterior si existe
+  if (searchProximityCircle) {
+    map.removeLayer(searchProximityCircle);
+  }
+  
+  // Crear nuevo círculo de búsqueda
+  searchProximityCircle = L.circle([location.lat, location.lng], {
+    color: '#e74c3c',
+    fillColor: '#e74c3c',
+    fillOpacity: 0.1,
+    weight: 2,
+    radius: radius
+  }).addTo(map);
+  
+  // Añadir tooltip al círculo
+  searchProximityCircle.bindTooltip(
+    `Radio de búsqueda: ${radius}m`,
+    { permanent: false, direction: 'center' }
+  );
+}
+
+
+//Resalta las paradas en la lista del panel lateral
+function highlightStopsInList(stopIds) {
+  // Primero, quitar cualquier resaltado anterior
+  document.querySelectorAll('.stop-item').forEach(item => {
+    item.style.backgroundColor = 'white';
+    item.style.borderLeft = 'none';
+  });
+  
+  // Resaltar las paradas que están en el rango
+  stopIds.forEach(id => {
+    const stopItem = document.querySelector(`.stop-item[data-id="${id}"]`);
+    if (stopItem) {
+      stopItem.style.backgroundColor = '#fff3f3';
+      stopItem.style.borderLeft = '4px solid #e74c3c';
+    }
+  });
+}
+
+//Limpia todos los resaltados de paradas
+function clearHighlightedStops() {
+  // Restaurar iconos originales de las paradas resaltadas
+  highlightedStops.forEach(stop => {
+    const route = window.routesData.features.find(r => r.properties.id === stop.routeId);
+    const color = route ? route.properties.color : '#f39c12';
+    stop.marker.setIcon(createStopIcon(color));
+  });
+  
+  // Limpiar la lista
+  highlightedStops = [];
+  
+  // Eliminar el círculo de proximidad de búsqueda
+  if (searchProximityCircle) {
+    map.removeLayer(searchProximityCircle);
+    searchProximityCircle = null;
+  }
+  
+  // Quitar resaltados de la lista
+  document.querySelectorAll('.stop-item').forEach(item => {
+    item.style.backgroundColor = 'white';
+    item.style.borderLeft = 'none';
+  });
 }
