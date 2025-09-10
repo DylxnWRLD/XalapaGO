@@ -67,24 +67,3 @@ function highlightStop(stopId) {
     document.querySelector(`.stop-item[data-id="${stopId}"]`).style.backgroundColor = '#f0f7ff';
   }
 }
-
-
-
-// Filtrar paradas
-function filterStops() {
-  const searchText = document.getElementById('search-stop').value.toLowerCase();
-  
-  allStopLayers.forEach(stop => {
-    const idMatch = stop.id.toLowerCase().includes(searchText);
-    const sequenceMatch = stop.sequence.toString().includes(searchText);
-    
-    const stopItem = document.querySelector(`.stop-item[data-id="${stop.id}"]`);
-    if (stopItem) {
-      if (idMatch || sequenceMatch) {
-        stopItem.style.display = 'block';
-      } else {
-        stopItem.style.display = 'none';
-      }
-    }
-  });
-}

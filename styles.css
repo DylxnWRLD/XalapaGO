@@ -390,3 +390,62 @@ body {
 .route-selector {
   display: none;
 }
+
+/* Estilos para el buscador y resultados */
+.search-results-header {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-bottom: 2px solid #3498db;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-results-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.clear-search-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.clear-search-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Mejoras al input de búsqueda */
+.filter-group {
+  position: relative;
+}
+
+#search-place {
+  width: calc(100% - 100px);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.search-button {
+  width: 90px;
+  padding: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background-color: #2980b9;
+}
