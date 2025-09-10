@@ -320,8 +320,7 @@ function searchInRouteData(searchTerm) {
 function showSearchResults(routeIds, title) {
   // Crear un elemento para mostrar el título de los resultados
   const routesContainer = document.getElementById('routes-container');
-  routesContainer.innerHTML = '';
-  
+  routesContainer.innerHTML = '';  
   const resultsHeader = document.createElement('div');
   resultsHeader.className = 'search-results-header';
   resultsHeader.innerHTML = `
@@ -350,6 +349,15 @@ function showSearchResults(routeIds, title) {
   if (routeIds.length > 0) {
     selectRoute(routeIds[0]);
   }
+
+  // Llamada borrar zona; actualiza la pantalla sin el filtro de busqueda.
+ document.getElementById('clear-search').addEventListener('click', () => {
+    document.getElementById('search-place').value = '';
+    populateRoutesList();
+    selectRoute('all');
+    clearHighlightedStops(); 
+  });
+
 }
 
 

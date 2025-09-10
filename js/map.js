@@ -29,7 +29,7 @@ let currentUserLocation = null;     // Ubicación actual del usuario
  */
 function initMap() {
   // Crear mapa centrado en Veracruz, México con zoom inicial 13
-  map = L.map('map').setView([19.54, -96.91], 13);
+  map = L.map('map').setView([19.54, -96.91], 16);
   
   // Configurar capas base disponibles
   baseLayers = {
