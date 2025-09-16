@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de usuario - XalapaGO</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="header">
+    <h1><i class="fas fa-bus"></i> XalapaGO</h1>
+    <p>Explora las rutas de transporte público en Xalapa</p>
+
+    <div id="auth-area" class="auth-area">
+      <a href="../index.html">Regresar</a>
+    </div>
+  </div>
+
+  <div class="container" style="justify-content:center; align-items:center; display:flex;">
+    <div class="route-info" style="max-width:600px; width:100%;">
+      <h3><i class="fas fa-user-plus"></i> Registro de Usuario</h3>
+
+      <!-- Formulario de Registro -->
+      <form action="guardar_usuario.php" method="POST" style="display:flex; flex-direction:column; gap:15px;">
+        
+        <div>
+          <label for="usuario">Nombre de usuario:</label>
+          <input type="text" id="usuario" name="usuario" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+        </div>
+
+        <div>
+          <label for="correo">Correo electrónico:</label>
+          <input type="email" id="correo" name="correo" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+        </div>
+
+        <div>
+          <label for="password">Contraseña:</label>
+          <input type="password" id="password" name="password" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+        </div>
+
+        <button type="submit" style="padding:0.8rem; background:#2c5aa0; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+          <i class="fas fa-user-check"></i> Registrar
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+
