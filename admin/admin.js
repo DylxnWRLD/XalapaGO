@@ -1,16 +1,27 @@
+// Ejecuta el codigo una vez que el DOM ha cargado por completo
 document.addEventListener("DOMContentLoaded", () => {
 
-    // --- Inicialización del mapa ---
+    // ==========================================================
+    // ------------------- INICIALIZACION MAPA ------------------
+    // ==========================================================
+
+    // Crear mapa centrado en coordenadas (Xalapa, Ver.) con zoom 13
     const map = L.map('map').setView([19.54, -96.91], 13);
     map.invalidateSize();
 
+    // Cargar tiles desde OpenStreetMap con atribucion
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // Contenedor de las capas dibujadas (rutas y paradas)
     let drawnItems = new L.FeatureGroup().addTo(map);
 
-    // --- Configuración de Leaflet Draw ---
+    // ==========================================================
+    // ---------------- CONFIGURACION LEAFLET DRAW --------------
+    // ==========================================================
+
+    // Herramientas de dibujo: polilineas (rutas) y marcadores (paradas)
     let drawControl = new L.Control.Draw({
         edit: { featureGroup: drawnItems },
         draw: {
@@ -28,30 +39,36 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
-
     map.addControl(drawControl);
 
-    // --- Variables de control ---
-    let nextRouteId = 14010000;
-    let nextStopId = 14020000;
-    let rutas = [];
-    let rutaSeleccionada = null;
-    let stopsSequence = 0;
+    // ==========================================================
+    // ------------------- VARIABLES DE CONTROL -----------------
+    // ==========================================================
 
-    // --- Manejo de eventos de dibujo ---
+    let nextRouteId = 14010000;    // ID inicial para rutas
+    let nextStopId = 14020000;     // ID inicial para paradas
+    let rutas = [];                // Lista de nombres de rutas
+    let rutaSeleccionada = null;   // Ruta actualmente seleccionada
+    let stopsSequence = 0;         // Contador de secuencia de paradas
+
+    // ==========================================================
+    // ------------------ EVENTOS DE DIBUJO ---------------------
+    // ==========================================================
+
     map.on(L.Draw.Event.CREATED, e => {
         const layer = e.layer;
 
-        // Para rutas (polilíneas)
+        // --- Si es una RUTA (polilinea) ---
         if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
             let descripcion = prompt("Descripción de la ruta (opcional):");
 
+            // Asignar propiedades en formato GeoJSON
             layer.feature = {
                 type: "Feature",
                 properties: {
                     id: (nextRouteId++).toString(),
                     name: `Ruta ${rutaSeleccionada}`,
-                    desc: descripcion || "", 
+                    desc: descripcion || "",
                     image: null,
                     notes: null,
                     peak_am: 10,
@@ -66,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
-        // Si es un marcador (parada)
+        // --- Si es una PARADA (marcador) ---
         if (layer instanceof L.Marker) {
             if (!rutaSeleccionada) {
                 alert("Selecciona una ruta antes de colocar paradas");
@@ -92,14 +109,17 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
+        // Agregar capa dibujada al mapa
         drawnItems.addLayer(layer);
     });
 
-    // Eventos de edición y eliminación (solo logueo en consola)
+    // Log de edicion y eliminacion en consola
     map.on(L.Draw.Event.EDITED, e => e.layers.eachLayer(layer => console.log("Editado:", layer)));
     map.on(L.Draw.Event.DELETED, e => e.layers.eachLayer(layer => console.log("Eliminado:", layer)));
 
-    // ---------------- RUTAS ----------------
+    // ==========================================================
+    // ------------------- MANEJO DE RUTAS ----------------------
+    // ==========================================================
 
     /**
      * Carga el archivo index.json con la lista de rutas disponibles
@@ -116,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * Muestra en la página la lista de rutas disponibles.
+     * Muestra en la pagina la lista de rutas disponibles.
      * Marca la ruta seleccionada y permite seleccionar otra al hacer click.
      */
     function mostrarListaRutas() {
@@ -132,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /**
-     * Carga los archivos GeoJSON de rutas y paradas de la ruta seleccionada.
+     * Carga los archivos GeoJSON (rutas y paradas) de la ruta seleccionada.
      * Limpia el mapa y reinicia la secuencia de paradas.
      */
     async function cargarRutaSeleccionada(carpeta) {
@@ -157,7 +177,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ---------------- BOTONES ----------------
+    // ==========================================================
+    // ------------------- BOTONES DEL SIDEBAR ------------------
+    // ==========================================================
 
     /**
      * Crea una nueva ruta pidiendo un nombre al usuario.
@@ -175,12 +197,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /**
-     * Elimina la ruta seleccionada después de confirmación del usuario.
+     * Elimina la ruta seleccionada despues de confirmacion del usuario.
      * Limpia el mapa y la lista de rutas.
      */
     document.getElementById("eliminarRuta").addEventListener("click", () => {
         if (!rutaSeleccionada) return alert("Selecciona una ruta primero");
-        if (!confirm(`Se eliminará la ruta ${rutaSeleccionada}. ¿Continuar?`)) return;
+        if (!confirm(`Se eliminara la ruta ${rutaSeleccionada}. ¿Continuar?`)) return;
         rutas = rutas.filter(r => r !== rutaSeleccionada);
         rutaSeleccionada = null;
         stopsSequence = 0;
@@ -190,28 +212,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /**
      * Descarga las rutas y paradas como archivos GeoJSON separados.
-     * Filtra los elementos por tipo de geometría.
+     * Filtra los elementos por tipo de geometria.
      */
     document.getElementById("downloadGeoJSON").addEventListener("click", () => {
         if (!rutaSeleccionada) return alert("Selecciona una ruta primero");
 
         const geojson = drawnItems.toGeoJSON();
 
+        // Rutas (LineString)
         const rutasGeoJSON = {
             type: "FeatureCollection",
             features: geojson.features.filter(f => f.geometry.type === "LineString")
         };
-        const paradasGeoJSON = {
-            type: "FeatureCollection",
-            features: geojson.features.filter(f => f.geometry.type === "Point")
-        };
-
         const blobRutas = new Blob([JSON.stringify(rutasGeoJSON, null, 2)], { type: "application/json" });
         const aRutas = document.createElement("a");
         aRutas.href = URL.createObjectURL(blobRutas);
         aRutas.download = "routes.geojson";
         aRutas.click();
 
+        // Paradas (Point)
+        const paradasGeoJSON = {
+            type: "FeatureCollection",
+            features: geojson.features.filter(f => f.geometry.type === "Point")
+        };
         const blobParadas = new Blob([JSON.stringify(paradasGeoJSON, null, 2)], { type: "application/json" });
         const aParadas = document.createElement("a");
         aParadas.href = URL.createObjectURL(blobParadas);
@@ -219,6 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
         aParadas.click();
     });
 
-    // Carga inicial del índice de rutas
+    // ==========================================================
+    // ------------------ CARGA INICIAL -------------------------
+    // ==========================================================
+
+    // Cargar indice de rutas al iniciar la aplicacion
     cargarIndex();
 });

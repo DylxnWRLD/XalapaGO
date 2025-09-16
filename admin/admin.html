@@ -4,35 +4,79 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin - Rutas</title>
+
+    <!-- 
+        Hoja de estilos de Leaflet (libreria de mapas)
+        Necesaria para dar formato correcto al mapa
+    -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- 
+        Estilos de Leaflet Draw (plugin para dibujar rutas y formas en el mapa) 
+    -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+
+    <!-- 
+        Libreria de iconos Font Awesome 
+        Utilizada para los iconos en el sidebar
+    -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 
+        Hoja de estilos personalizada 
+        Define la apariencia del administrador 
+    -->
     <link rel="stylesheet" href="admin.css" />
 </head>
 
 <body>
+    <!-- Titulo principal de la herramienta -->
     <h1>Herramienta de Administrador</h1>
 
+    <!-- Contenedor principal que incluye el sidebar y el mapa -->
     <div id="main">
+
+        <!-- Sidebar lateral con opciones de administracion -->
         <div id="sidebar">
+
+            <!-- Seccion de botones de control -->
             <div id="botonesSidebar">
                 <h2><i class="fas fa-sliders-h"></i> Opciones</h2>
+
+                <!-- Boton para agregar una nueva ruta en el mapa -->
                 <button id="nuevaRuta">Agregar ruta</button>
+
+                <!-- Boton para eliminar la ruta seleccionada -->
                 <button id="eliminarRuta">Eliminar ruta seleccionada</button>
+
+                <!-- Boton para exportar las rutas en formato geoJSON -->
                 <button id="downloadGeoJSON">Descargar archivo geoJSON</button>
             </div>
 
+            <!-- Lista de rutas ya creadas -->
             <div id="rutasSidebar">
                 <h3>Rutas existentes:</h3>
                 <ul id="listaRutas"></ul>
             </div>
         </div>
 
+        <!-- Contenedor donde se renderiza el mapa interactivo -->
         <div id="map"></div>
     </div>
 
+    <!-- 
+        Libreria Leaflet (mapas interactivos) 
+    -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- 
+        Plugin Leaflet Draw (herramientas de dibujo sobre el mapa) 
+    -->
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+    <!-- 
+        Script personalizado que contiene la logica del administrador 
+    -->
     <script src="admin.js"></script>
 </body>
 

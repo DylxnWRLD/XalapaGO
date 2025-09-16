@@ -1,104 +1,200 @@
-/* Reset básico */
+/*
+* =============================================
+* ESTILOS GENERALES Y RESETEO BÁSICO
+* =============================================
+* Esta sección establece las bases para el diseño,
+* eliminando los márgenes y rellenos por defecto
+* y definiendo la fuente principal.
+*/
 html,
 body {
+    /* Elimina márgenes y rellenos por defecto */
     margin: 0;
     padding: 0;
+    /* Asegura que la página ocupe toda la altura del viewport */
     height: 100%;
+    /* Define la fuente principal */
     font-family: Arial, sans-serif;
 }
 
-/* Encabezado */
+/*
+* =============================================
+* ESTILOS DEL ENCABEZADO (HEADER)
+* =============================================
+* Define el estilo del encabezado superior de la página,
+* incluyendo su altura, colores y alineación del texto.
+*/
 h1 {
+    /* Altura del 10% del viewport */
     height: 10vh;
+    /* Color de fondo azul oscuro */
     background-color: #1e3c72;
+    /* Color de texto blanco */
     color: white;
+    /* Relleno interno */
     padding: 5px;
+    /* Elimina el margen por defecto */
     margin: 0;
+    /* Centra el texto verticalmente */
     line-height: 10vh;
+    /* Centra el texto horizontalmente */
     text-align: center;
 }
 
-h2{
-   font-size: 1.4rem;
-  margin-bottom: 1rem;
-  color: #2c5aa0;
-  border-bottom: 3px solid #090909;
-  padding-bottom: 0.5rem;
-  display: flex;
-  align-items: left;
-  gap: 5px;;
-}
-
-/* Contenedor principal debajo del header */
-#main {
+/*
+* =============================================
+* ESTILOS PARA TÍTULOS SECUNDARIOS
+* =============================================
+* Define el estilo para los títulos h2, a menudo
+* usados para secciones dentro del contenido.
+*/
+h2 {
+    /* Tamaño de la fuente */
+    font-size: 1.4rem;
+    /* Margen inferior */
+    margin-bottom: 1rem;
+    /* Color de texto azul */
+    color: #2c5aa0;
+    /* Borde inferior como separador visual */
+    border-bottom: 3px solid #090909;
+    /* Relleno inferior */
+    padding-bottom: 0.5rem;
+    /* Utiliza Flexbox para alinear el contenido */
     display: flex;
-    flex-direction: row;
-    height: 80vh; /* lo que queda después del header */
+    align-items: left;
+    gap: 5px;
 }
 
-/* Sidebar */
+/*
+* =============================================
+* CONTENEDOR PRINCIPAL (#main)
+* =============================================
+* Contenedor Flexbox que organiza la barra lateral y
+* el contenido principal en una fila.
+*/
+#main {
+    /* Convierte el contenedor en un flex container */
+    display: flex;
+    /* Organiza los elementos hijos en una fila */
+    flex-direction: row;
+    /* Ocupa el 80% restante de la altura del viewport */
+    height: 80vh;
+}
+
+/*
+* =============================================
+* BARRA LATERAL (SIDEBAR)
+* =============================================
+* Define el estilo y el comportamiento de la barra
+* lateral izquierda.
+*/
 #sidebar {
+    /* Ancho fijo para la barra lateral */
     width: 250px;
+    /* Organiza los elementos internos en una columna */
     display: flex;
     flex-direction: column;
+    /* Relleno interno */
     padding: 10px;
+    /* Color de fondo gris claro */
     background: #f4f4f4;
+    /* Borde derecho para separar del contenido principal */
     border-right: 1px solid #ccc;
+    /* El padding y el borde se incluyen en el ancho total */
     box-sizing: border-box;
 }
 
-/* Contenedor de botones fijo */
+/*
+* =============================================
+* CONTENEDORES INTERNOS DE LA BARRA LATERAL
+* =============================================
+* Organiza los elementos de la barra lateral en
+* secciones flexibles.
+*/
+/* Contenedor para los botones (fijo) */
 #botonesSidebar {
-    flex: 0 0 auto; /* ocupa solo el espacio que necesite */
+    /* No crece ni se encoge, solo ocupa el espacio que necesita */
+    flex: 0 0 auto;
 }
 
-/* Contenedor de rutas con scroll */
+/* Contenedor para las rutas (con scroll) */
 #rutasSidebar {
-    flex: 1 1 auto; /* ocupa el resto del espacio */
+    /* Ocupa todo el espacio restante disponible */
+    flex: 1 1 auto;
+    /* Permite el desplazamiento vertical si el contenido excede la altura */
     overflow-y: auto;
+    /* Margen superior para separación */
     margin-top: 10px;
 }
 
-/* Titulo y lista */
+/* Estilo para el título de la sección de rutas */
 #rutasSidebar h3 {
     margin-top: 0;
 }
 
+/*
+* =============================================
+* ESTILOS DE LISTA Y BOTONES
+* =============================================
+* Define la apariencia de la lista de rutas y los botones.
+*/
+/* Lista sin marcadores */
 #listaRutas {
     list-style: none;
     padding: 0;
     margin: 0 0 10px 0;
 }
 
+/* Elementos de la lista */
 #listaRutas li {
     padding: 5px;
+    /* Cambia el cursor para indicar que es clickeable */
     cursor: pointer;
 }
 
+/* Estilo para el elemento de la lista seleccionado */
 #listaRutas li.selected {
+    /* Fondo verde */
     background-color: #4CAF50;
+    /* Texto blanco */
     color: white;
 }
 
-/* Botones */
+/* Estilo para todos los botones */
 button {
+    /* Ocupa todo el ancho disponible */
     display: block;
     width: 100%;
+    /* Margen y relleno */
     margin-bottom: 5px;
     padding: 8px;
+    /* Sin borde */
     border: none;
+    /* Bordes redondeados */
     border-radius: 5px;
+    /* Colores */
     background: #1e3c72;
     color: white;
+    /* Cambia el cursor a una mano */
     cursor: pointer;
 }
 
+/* Estilo para el estado de hover del botón */
 button:hover {
+    /* Cambia el color de fondo */
     background: #45a049;
 }
 
-/* Mapa */
+/*
+* =============================================
+* ESTILOS DEL MAPA
+* =============================================
+* Contenedor para el mapa, que ocupa el espacio
+* restante en el diseño principal.
+*/
 #map {
-    flex: 1; /* ocupa todo el espacio restante */
+    /* El mapa ocupa todo el espacio restante */
+    flex: 1;
+    /* Altura mínima del 100% de su contenedor */
     min-height: 100%;
 }
