@@ -27,6 +27,14 @@ const mapSettings = {
   defaultZoom: 13,
   maxZoom: 19
 };
+const searchAliases = {
+  "caxa": "Central de Autobuses de Xalapa, Veracruz",
+  "zona uv": "Zona Universitaria, Xalapa, Veracruz",
+  "uv": "Universidad Veracruzana, Xalapa, Veracruz",
+  "plaza crystal": "Plaza Crystal, Xalapa, Veracruz",
+  "usbi": "Campus para la Cultura las Artes y el Deporte",
+  "cem": "Centro de Alta Especialidad"
+};
 
 /**
  * Carga los datos de rutas y paradas desde archivos GeoJSON.
@@ -311,10 +319,17 @@ async function performSearch() {
   }
 }
 
+// Normaliza y reemplaza el término de búsqueda si es un alias
+function normalizeSearchTerm(term) {
+  const normalized = term.trim().toLowerCase();
+  return searchAliases[normalized] || term; // usa alias si existe
+}
+
 // Geocodificar el término de búsqueda usando Nominatim (OpenStreetMap)
 async function geocodeSearchTerm(searchTerm) {
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm + ', Xalapa, Veracruz')}&limit=1`);
+    const normalizedTerm = normalizeSearchTerm(searchTerm);
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(normalizedTerm + ', Xalapa, Veracruz')}&limit=1`);
     const data = await response.json();
 
     if (data && data.length > 0) {
