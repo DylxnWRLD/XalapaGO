@@ -1,19 +1,25 @@
-// Añadir parada a la lista del panel lateral
-function addStopToList(properties, color) {
+/**
+ * Esta funcion se encarga de añadir una parada al contenedor de paradas en el panel lateral y ademas 
+ * cuando se hace clic en alguna parada se muestra un recuadro con la informacion de la parada y ruta,
+ * esto sirve para marcar una parada y saber en donde debes bajarte del camion.
+ * 
+ * @param {Object} properties objeto con los datos de las paradas
+ */
+function addStopToList(properties) {
   const stopsContainer = document.getElementById('stops-container');
   const stopItem = document.createElement('div');
   stopItem.className = 'stop-item';
   stopItem.dataset.id = properties.id;
   stopItem.dataset.route = properties.routeId;
   
-  // Mostrar Parada #
+  // Mostrar el numero de la Parada
   stopItem.innerHTML = `
     <h4><i class="fas fa-map-marker-alt"></i> Parada #${properties.sequence}</h4>
     <p><strong>Ruta:</strong> ${properties.routeId}</p>
     <p><strong>ID:</strong> ${properties.id}</p>
   `;
   
-  // Añadir evento para resaltar la parada al hacer clic
+  // se añade un evento para resaltar la parada al hacer clic
   stopItem.addEventListener('click', function() {
     highlightStop(properties.id);
     const stopLayer = allStopLayers.find(s => s.id === properties.id);
@@ -26,7 +32,13 @@ function addStopToList(properties, color) {
   stopsContainer.appendChild(stopItem);
 }
 
-// Añadir ruta a la lista del panel lateral
+
+/**
+ * Esta funcion se encarga de añadir una ruta al contenedor de rutas en el panel lateral y poder 
+ * seleccionar una rutal hacer clic sobre su recuadro.
+ * 
+ * @param {object} properties objeto que contiene toda la informacion sobre las rutas 
+ */
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -47,7 +59,13 @@ function addRouteToList(properties) {
   routesContainer.appendChild(routeItem);
 }
 
-// Resaltar parada seleccionada
+
+/**
+ * la funcion se encarga de resaltar la parada seleccionada en el panel lateral y en el mapa
+ * ademas de restablecer las demas paradas a su estado original (color e icono).
+ * 
+ * @param {string} stopId id de la parada seleccionada
+ */
 function highlightStop(stopId) {
   // Restablecer todas las paradas
   allStopLayers.forEach(stop => {
