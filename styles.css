@@ -363,7 +363,6 @@ body {
   }
 }
 
-
 /* Estilos para el selector de rutas */
 .route-select {
   width: 100%;
@@ -448,4 +447,333 @@ body {
 
 .search-button:hover {
   background-color: #2980b9;
+}
+
+/* =============================================
+   ESTILOS PARA ICONOS Y MARCADORES
+   ============================================= */
+
+/* Icono de parada básico */
+.stop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stop-icon-inner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* =============================================
+   ESTILOS PARA POPUPS
+   ============================================= */
+
+/* Popup de ruta */
+.route-popup {
+  min-width: 200px;
+}
+
+.route-popup-title {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+/* Popup de parada */
+.stop-popup {
+  min-width: 200px;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.stop-popup-title {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+.stop-popup-actions {
+  text-align: center;
+  margin-top: 15px;
+}
+
+/* Indicador de destino en popup de parada */
+.stop-destination-indicator {
+  background: #fff5f5;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e74c3c;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.stop-destination-text {
+  color: #e74c3c;
+  font-size: 12px;
+  margin: 0;
+  font-weight: bold;
+}
+
+/* =============================================
+   ESTILOS PARA MARCADOR DE DESTINO
+   ============================================= */
+
+.destination-marker {
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.destination-marker-container {
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.destination-label {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+  margin-bottom: 8px;
+  border: 2px solid white;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInBounce 0.6s ease-out;
+}
+
+.destination-pin {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  background-color: #e74c3c;
+  border: 2px solid black;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+  margin: 0 auto;
+  animation: pulse 2s infinite;
+}
+
+.destination-pin-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: black;
+  border-radius: 50%;
+}
+
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: rotate(-45deg) scale(1); }
+  50% { transform: rotate(-45deg) scale(1.1); }
+  100% { transform: rotate(-45deg) scale(1); }
+}
+
+/* Popup de destino */
+.destination-popup {
+  min-width: 200px;
+  font-family: Arial, sans-serif;
+}
+
+.destination-popup-title {
+  margin: 0 0 15px 0;
+  color: #e74c3c;
+  border-bottom: 2px solid #e74c3c;
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+.destination-popup-info {
+  background: #fff5f5;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+}
+
+.destination-popup-divider {
+  border: 1px solid #fee;
+  margin: 10px 0;
+}
+
+.destination-popup-note {
+  color: #e74c3c;
+  font-size: 12px;
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+.destination-popup-actions {
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* =============================================
+   ESTILOS PARA MARCADOR DE PARADA MÁS CERCANA
+   ============================================= */
+
+.nearest-stop-marker {
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.nearest-stop-container {
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.nearest-stop-label {
+  background: linear-gradient(135deg, #2c5aa0, #2c5aa0);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+  margin-bottom: 8px;
+  border: 2px solid white;
+  animation: bounce 2s infinite;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.nearest-stop-distance {
+  margin-top: 2px;
+}
+
+.nearest-stop-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid #e74c3c;
+  box-shadow: 0 0 0 3px white, 0 0 15px rgba(231, 76, 60, 0.6);
+  margin: 0 auto;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+  60% { transform: translateY(-3px); }
+}
+
+/* Popup de parada más cercana */
+.nearest-stop-popup {
+  text-align: center;
+  min-width: 200px;
+  font-family: Arial, sans-serif;
+}
+
+.nearest-stop-popup-title {
+  color: #2c5aa0;
+  margin: 0 0 10px 0;
+}
+
+.nearest-stop-walk-time {
+  color: #27ae60;
+  font-size: 12px;
+  margin: 10px 0 0 0;
+}
+
+/* =============================================
+   ESTILOS PARA MARCADOR DE UBICACIÓN DE USUARIO
+   ============================================= */
+
+.user-location-marker {
+  position: relative;
+}
+
+.user-location-pin {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  background-color: #e74c3c;
+  border: 2px solid black;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+}
+
+.user-location-pin-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: black;
+  border-radius: 50%;
+}
+
+/* =============================================
+   ESTILOS PARA BOTONES
+   ============================================= */
+
+/* Botón para establecer destino */
+.set-destination-btn {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.set-destination-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Botón para quitar destino */
+.clear-destination-btn {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.clear-destination-btn:hover {
+  background: #7f8c8d;
 }

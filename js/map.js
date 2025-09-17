@@ -20,6 +20,10 @@ let userLocationCircle = null;      // Círculo de radio de proximidad
 let nearestStopMarker = null;       // Marcador de parada más cercana
 let currentUserLocation = null;     // Ubicación actual del usuario
 
+// Variables para destino final
+let destinationMarker = null;       // Marcador de destino final
+let selectedDestination = null;     // Información del destino seleccionado
+
 // =============================================
 // INICIALIZACIÓN DEL MAPA
 // =============================================
@@ -29,7 +33,7 @@ let currentUserLocation = null;     // Ubicación actual del usuario
  */
 function initMap() {
   // Crear mapa centrado en Veracruz, México con zoom inicial 13
-  map = L.map('map').setView([19.54, -96.91], 16);
+  map = L.map('map').setView([19.54, -96.91], 13);
   
   // Configurar capas base disponibles
   baseLayers = {
@@ -50,8 +54,11 @@ function initMap() {
   // Añadir capa base por defecto
   baseLayers.Standard.addTo(map);
   
-  // Configurar evento para actualizar visibilidad de parada cercana al cambiar zoom
-  map.on('zoomend', updateNearestStopVisibility);
+  // Configurar eventos para actualizar visibilidad según zoom
+  map.on('zoomend', function() {
+    updateNearestStopVisibility();
+    updateDestinationVisibility();
+  });
 }
 
 // =============================================
@@ -79,7 +86,7 @@ function createTileLayer(url, attribution) {
 function createStopIcon(color) {
   return L.divIcon({
     className: 'stop-icon',
-    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px ${color}"></div>`,
+    html: `<div class="stop-icon-inner" style="background-color: ${color}; border: 2px solid white; box-shadow: 0 0 0 2px ${color}"></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 8]
   });
@@ -153,10 +160,8 @@ function createRouteLayer(feature) {
 function createRoutePopupContent(feature) {
   const props = feature.properties;
   return `
-    <div style="min-width: 200px;">
-      <h3 style="margin: 0 0 10px 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-        ${props.name}
-      </h3>
+    <div class="route-popup">
+      <h3 class="route-popup-title">${props.name}</h3>
       <p><strong>Descripción:</strong> ${props.desc}</p>
       <p><strong>Notas:</strong> ${props.notes}</p>
       <p><strong>Horario Pico AM:</strong> ${props.peak_am} unidades</p>
@@ -201,6 +206,173 @@ function showSingleRoute(routeId) {
 }
 
 // =============================================
+// FUNCIONES DE DESTINO FINAL
+// =============================================
+
+/**
+ * Crea un marcador personalizado para el destino final con etiqueta horizontal
+ * @param {Array} coordinates - Coordenadas [lat, lng] del destino
+ * @param {Object} stopData - Datos de la parada de destino
+ * @returns {L.Marker} Marcador de destino personalizado
+ */
+function createDestinationMarker(coordinates, stopData) {
+  return L.marker(coordinates, {
+    icon: L.divIcon({
+      className: 'destination-marker',
+      html: `
+        <div class="destination-marker-container">
+          <div class="destination-label">DESTINO</div>
+          <div class="destination-pin">
+            <div class="destination-pin-inner"></div>
+          </div>
+        </div>
+      `,
+      iconSize: [120, 70],
+      iconAnchor: [60, 70]
+    })
+  });
+}
+
+/**
+ * Actualiza la visibilidad del marcador de destino según el nivel de zoom
+ */
+function updateDestinationVisibility() {
+  if (!destinationMarker || !selectedDestination) return;
+  
+  const currentZoom = map.getZoom();
+  
+  // Mostrar/ocultar según el zoom para evitar interferencia visual
+  if (currentZoom >= 15) {
+    if (!map.hasLayer(destinationMarker)) {
+      destinationMarker.addTo(map);
+    }
+  } else {
+    if (map.hasLayer(destinationMarker)) {
+      map.removeLayer(destinationMarker);
+    }
+  }
+}
+
+/**
+ * Establece una parada como destino final con visibilidad adaptable
+ * @param {string} stopId - ID de la parada a establecer como destino
+ */
+function setDestination(stopId) {
+  // Encontrar la parada en la lista
+  const stopData = allStopLayers.find(stop => stop.id === stopId);
+  if (!stopData) {
+    console.error("Parada no encontrada:", stopId);
+    return;
+  }
+
+  // Remover marcador de destino anterior si existe
+  if (destinationMarker) {
+    map.removeLayer(destinationMarker);
+  }
+
+  // Crear nuevo marcador de destino con etiqueta horizontal
+  destinationMarker = createDestinationMarker(stopData.coordinates, stopData);
+  
+  // Agregar popup con información de destino
+  const routeData = window.routesData.features.find(r => r.properties.id === stopData.routeId);
+  const routeColor = routeData ? routeData.properties.color : '#f39c12';
+  const routeName = routeData ? routeData.properties.name : 'Desconocida';
+  
+  const popupContent = `
+    <div class="destination-popup">
+      <h3 class="destination-popup-title">DESTINO FINAL</h3>
+      <div class="destination-popup-info">
+        <p><strong><i class="fas fa-map-marker-alt"></i> Parada #${stopData.properties.sequence}</strong></p>
+        <p><strong>Ruta:</strong> <span style="color: ${routeColor};">${routeName}</span></p>
+        <hr class="destination-popup-divider">
+        <p class="destination-popup-note">Esta es tu parada de destino seleccionada</p>
+      </div>
+      <div class="destination-popup-actions">
+        <button onclick="clearDestination()" class="clear-destination-btn">Quitar Destino</button>
+      </div>
+    </div>
+  `;
+  
+  destinationMarker.bindPopup(popupContent);
+  
+  // Solo agregar al mapa si el zoom es apropiado
+  const currentZoom = map.getZoom();
+  if (currentZoom >= 14) {
+    destinationMarker.addTo(map);
+  }
+  
+  // Guardar información del destino
+  selectedDestination = {
+    id: stopId,
+    data: stopData,
+    routeData: routeData
+  };
+
+  // Actualizar el popup de la parada original para mostrar que está seleccionada como destino
+  updateStopPopupWithDestination(stopId);
+
+  console.log("Destino establecido:", stopData.properties);
+}
+
+/**
+ * Limpia el destino actual
+ */
+function clearDestination() {
+  if (destinationMarker) {
+    map.removeLayer(destinationMarker);
+    destinationMarker = null;
+  }
+  
+  if (selectedDestination) {
+    // Restaurar popup original de la parada
+    updateStopPopupWithDestination(selectedDestination.id, false);
+    selectedDestination = null;
+  }
+}
+
+/**
+ * Actualiza el popup de una parada para incluir/excluir información de destino
+ * @param {string} stopId - ID de la parada
+ * @param {boolean} isDestination - Si la parada es destino o no
+ */
+function updateStopPopupWithDestination(stopId, isDestination = true) {
+  const stopData = allStopLayers.find(stop => stop.id === stopId);
+  if (!stopData) return;
+
+  const routeData = window.routesData.features.find(r => r.properties.id === stopData.routeId);
+  const routeColor = routeData ? routeData.properties.color : '#f39c12';
+  const routeName = routeData ? routeData.properties.name : 'Desconocida';
+
+  let popupContent = `
+    <div class="stop-popup">
+      <h3 class="stop-popup-title">Parada #${stopData.properties.sequence}</h3>
+      <p><strong>Ruta:</strong> <span style="color: ${routeColor};">${routeName}</span></p>
+  `;
+
+  if (isDestination) {
+    popupContent += `
+      <div class="stop-destination-indicator">
+        <p class="stop-destination-text">ESTABLECIDA COMO DESTINO</p>
+      </div>
+      <div class="stop-popup-actions">
+        <button onclick="clearDestination()" class="clear-destination-btn">Quitar Destino</button>
+      </div>
+    `;
+  } else {
+    popupContent += `
+      <div class="stop-popup-actions">
+        <button onclick="setDestination('${stopId}')" class="set-destination-btn">Marcar como Destino</button>
+      </div>
+    `;
+  }
+
+  popupContent += `</div>`;
+  
+  // Actualizar el popup del marcador
+  stopData.marker.setPopupContent(popupContent);
+}
+
+// =============================================
 // GESTIÓN DE PARADAS
 // =============================================
 
@@ -226,7 +398,7 @@ function loadStops() {
     const route = window.routesData.features.find(r => r.properties.id === routeId);
     const color = route ? route.properties.color : '#f39c12';
     
-    // Crear marcador para la parada
+    // Crear marcador con funcionalidad de destino
     const marker = createStopMarker(stop, color);
     
     // Guardar referencia a la capa
@@ -251,7 +423,7 @@ function loadStops() {
 }
 
 /**
- * Crea un marcador para una parada
+ * Crea un marcador para una parada con funcionalidad de destino
  * @param {Object} stop - Datos de la parada
  * @param {string} color - Color del marcador
  * @returns {L.Marker} Marcador configurado
@@ -262,16 +434,22 @@ function createStopMarker(stop, color) {
     { icon: createStopIcon(color) }
   );
   
-  // Contenido básico para el popup
-  const info = `
-    <div style="min-width: 180px; padding: 10px;">
-      <h3 style="margin: 0 0 12px 0; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; text-align: center;">
-        Parada #${stop.properties.sequence}
-      </h3>
+  // Obtener datos de la ruta
+  const routeData = window.routesData.features.find(r => r.properties.id === stop.properties.routeId);
+  const routeName = routeData ? routeData.properties.name : 'Desconocida';
+  
+  // Contenido del popup con botón de destino
+  const popupContent = `
+    <div class="stop-popup">
+      <h3 class="stop-popup-title">Parada #${stop.properties.sequence}</h3>
+      <p><strong>Ruta:</strong> <span style="color: ${color};">${routeName}</span></p>
+      <div class="stop-popup-actions">
+        <button onclick="setDestination('${stop.properties.id}')" class="set-destination-btn">Marcar como Destino</button>
+      </div>
     </div>
   `;
   
-  marker.bindPopup(info);
+  marker.bindPopup(popupContent);
   return marker;
 }
 
@@ -337,10 +515,25 @@ function changeMapStyle(style) {
 }
 
 /**
- * Selecciona una ruta y actualiza la visualización
+ * Selecciona una ruta y actualiza la visualización con manejo de destino
  * @param {string} routeId - ID de la ruta a seleccionar ('all' para todas)
  */
 function selectRoute(routeId) {
+  // Verificar si el destino actual pertenece a la ruta seleccionada
+  if (selectedDestination && routeId !== 'all') {
+    const destinationRoute = selectedDestination.data.routeId;
+    if (destinationRoute !== routeId) {
+      // El destino no pertenece a la ruta seleccionada, mostrar advertencia
+      const shouldKeep = confirm(
+        `Tu destino actual está en la ruta "${destinationRoute}" pero has seleccionado la ruta "${routeId}". ¿Deseas mantener el destino actual?`
+      );
+      
+      if (!shouldKeep) {
+        clearDestination();
+      }
+    }
+  }
+
   selectedRoute = routeId;
 
   // Actualizar el selector para reflejar la selección
@@ -454,6 +647,37 @@ function highlightStop(stopId) {
 }
 
 // =============================================
+// FUNCIONES DE UTILIDAD PARA DESTINO
+// =============================================
+
+/**
+ * Obtiene información del destino actual
+ * @returns {Object|null} Información del destino o null si no hay destino
+ */
+function getCurrentDestination() {
+  return selectedDestination;
+}
+
+/**
+ * Centra el mapa en el destino actual
+ */
+function focusOnDestination() {
+  if (selectedDestination && destinationMarker) {
+    map.setView(selectedDestination.data.coordinates, 16);
+    destinationMarker.openPopup();
+  }
+}
+
+/**
+ * Verifica si una parada está establecida como destino
+ * @param {string} stopId - ID de la parada a verificar
+ * @returns {boolean} True si la parada es el destino actual
+ */
+function isDestination(stopId) {
+  return selectedDestination && selectedDestination.id === stopId;
+}
+
+// =============================================
 // FUNCIONALIDAD DE UBICACIÓN Y PROXIMIDAD
 // =============================================
 
@@ -548,57 +772,13 @@ function createNearestStopMarker(stop, distance) {
     icon: L.divIcon({
       className: 'nearest-stop-marker',
       html: `
-        <div style="
-          position: relative;
-          text-align: center;
-          font-family: Arial, sans-serif;
-        ">
-          <!-- Mensaje encima -->
-          <div style="
-            background: linear-gradient(135deg, #2c5aa0, #2c5aa0);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 25px;
-            font-size: 12px;
-            font-weight: bold;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
-            margin-bottom: 8px;
-            border: 2px solid white;
-            animation: bounce 2s infinite;
-            min-width: 180px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-          ">
+        <div class="nearest-stop-container">
+          <div class="nearest-stop-label">
             <div><i class="fas fa-bus"></i> PARADA MÁS CERCANA</div>
-            <div style="margin-top: 2px;">📍 ${Math.round(distance)}m</div>
+            <div class="nearest-stop-distance">${Math.round(distance)}m</div>
           </div>
-          <!-- Icono de parada -->
-          <div style="
-            background-color: ${routeColor}; 
-            width: 20px; 
-            height: 20px; 
-            border-radius: 50%; 
-            border: 3px solid #e74c3c; 
-            box-shadow: 0 0 0 3px white, 0 0 15px rgba(231, 76, 60, 0.6);
-            margin: 0 auto;
-            animation: pulse 1.5s infinite;
-          "></div>
+          <div class="nearest-stop-icon" style="background-color: ${routeColor}"></div>
         </div>
-        <style>
-          @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-5px); }
-            60% { transform: translateY(-3px); }
-          }
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-          }
-        </style>
       `,
       iconSize: [200, 90],
       iconAnchor: [100, 80]
@@ -652,14 +832,12 @@ function updateNearestStop() {
     
     // Agregar popup con información detallada
     const popupContent = `
-      <div style="text-align: center; min-width: 200px; font-family: Arial, sans-serif;">
-        <h3 style="color: #2c5aa0; margin: 0 0 10px 0;"><i class="fas fa-bus"></i> Parada Más Cercana</h3>
+      <div class="nearest-stop-popup">
+        <h3 class="nearest-stop-popup-title">Parada Más Cercana</h3>
         <p><strong>Parada #${result.stop.properties.sequence}</strong></p>
         <p><strong>Ruta:</strong> ${result.stop.routeId}</p>
         <p><strong>Distancia:</strong> ${Math.round(result.distance)} metros</p>
-        <p style="color: #27ae60; font-size: 12px; margin: 10px 0 0 0;">
-          ⏱️ Tiempo caminando: ~${Math.round(result.distance / 83)} minutos
-        </p>
+        <p class="nearest-stop-walk-time">Tiempo caminando: ~${Math.round(result.distance / 83)} minutos</p>
       </div>
     `;
     nearestStopMarker.bindPopup(popupContent);
@@ -689,28 +867,10 @@ function enableUserLocation() {
           // Crear un marcador personalizado para la ubicación del usuario
           window.userMarker = L.marker([lat, lng], {
             icon: L.divIcon({
-              className: 'user-location',
+              className: 'user-location-marker',
               html: `
-                <div style="
-                  position: relative;
-                  width: 26px;
-                  height: 26px;
-                  background-color: #e74c3c;
-                  border: 2px solid black;
-                  border-radius: 50% 50% 50% 0;
-                  transform: rotate(-45deg);
-                  box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
-                ">
-                  <div style="
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) rotate(45deg);
-                    width: 10px;
-                    height: 10px;
-                    background: black;
-                    border-radius: 50%;
-                  "></div>
+                <div class="user-location-pin">
+                  <div class="user-location-pin-inner"></div>
                 </div>
               `,
               iconSize: [24, 24],
