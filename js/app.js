@@ -1,4 +1,9 @@
-// Inicialización de la aplicación
+/**
+ * Inicialización de la aplicación al cargar el DOM.
+ * Se encarga de cargar datos, inicializar el mapa,
+ * habilitar la ubicación del usuario, configurar eventos,
+ * preparar la búsqueda y actualizar la interfaz de usuario.
+ */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   initMap();
@@ -9,7 +14,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateUI();
 });
 
-// Variables globales
+/** 
+ * Variables globales que almacenan rutas disponibles,
+ * el círculo de proximidad de búsqueda, las paradas resaltadas
+ * y la configuración inicial del mapa.
+ */
 let availableRoutes = [];
 let searchProximityCircle = null;
 let highlightedStops = [];
@@ -19,7 +28,14 @@ const mapSettings = {
   maxZoom: 19
 };
 
-// Cargar datos de rutas y paradas
+/**
+ * Carga los datos de rutas y paradas desde archivos GeoJSON.
+ * Detecta las rutas disponibles, obtiene la información
+ * de cada ruta y sus paradas, y finalmente asigna colores.
+ * 
+ * @async
+ * @function loadData
+ */
 async function loadData() {
   try {
     window.routesData = { type: "FeatureCollection", features: [] };
@@ -40,7 +56,7 @@ async function loadData() {
         if (routeData.features?.length > 0) {
           window.routesData.features.push(routeData.features[0]);
         }
-        
+
         if (stopsData.features?.length > 0) {
           window.stopsData.features = window.stopsData.features.concat(stopsData.features);
         }
@@ -55,7 +71,13 @@ async function loadData() {
   }
 }
 
-// Detectar rutas disponibles
+/**
+ * Detecta las rutas disponibles leyendo el archivo índice.
+ * Actualiza la variable global `availableRoutes`.
+ * 
+ * @async
+ * @function detectAvailableRoutes
+ */
 async function detectAvailableRoutes() {
   try {
     const response = await fetch('data/rutas/index.json');
@@ -69,46 +91,61 @@ async function detectAvailableRoutes() {
   }
 }
 
-// Asignar colores a las rutas
+/**
+ * Asigna colores a las rutas cargadas de forma cíclica
+ * desde una paleta de colores predefinida.
+ * 
+ * @function assignRouteColors
+ */
 function assignRouteColors() {
   const colors = [
     '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
     '#1abc9c', '#d35400', '#c0392b', '#16a085', '#27ae60',
     '#8e44ad', '#f1c40f', '#e67e22', '#7f8c8d', '#34495e'
   ];
-  
+
   window.routesData.features.forEach((feature, index) => {
     feature.properties.color = colors[index % colors.length];
   });
 }
 
-// Configurar event listeners
+/**
+ * Configura los event listeners de la aplicación,
+ * incluyendo cambio de estilos del mapa, apertura/cierre
+ * de la barra lateral y manejo de pestañas.
+ * 
+ * @function setupEventListeners
+ */
 function setupEventListeners() {
-  
   document.getElementById('style-default').addEventListener('click', () => changeMapStyle('Standard'));
   document.getElementById('style-satellite').addEventListener('click', () => changeMapStyle('Satélite'));
   document.getElementById('style-dark').addEventListener('click', () => changeMapStyle('Oscuro'));
 
-  document.getElementById('sidebar-toggle').addEventListener('click', function() {
+  document.getElementById('sidebar-toggle').addEventListener('click', function () {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('hidden');
-    this.innerHTML = sidebar.classList.contains('hidden') 
-      ? '<i class="fas fa-bars"></i>' 
+    this.innerHTML = sidebar.classList.contains('hidden')
+      ? '<i class="fas fa-bars"></i>'
       : '<i class="fas fa-times"></i>';
   });
 
   document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function() {
+    tab.addEventListener('click', function () {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      
+
       this.classList.add('active');
       document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
     });
   });
 }
 
-// Actualizar la interfaz de usuario
+/**
+ * Actualiza la interfaz de usuario cargando rutas,
+ * paradas y estadísticas.
+ * 
+ * @function updateUI
+ */
 function updateUI() {
   populateRoutesList();
   updateStats();
@@ -116,7 +153,13 @@ function updateUI() {
   loadStops();
 }
 
-// Poblar la lista de rutas
+/**
+ * Pobla la lista de rutas en el contenedor lateral,
+ * incluyendo un elemento para mostrar todas las rutas
+ * y los elementos individuales para cada ruta.
+ * 
+ * @function populateRoutesList
+ */
 function populateRoutesList() {
   const routesContainer = document.getElementById('routes-container');
   routesContainer.innerHTML = '';
@@ -137,7 +180,14 @@ function populateRoutesList() {
   });
 }
 
-// Añadir ruta a la lista
+/**
+ * Agrega una ruta específica a la lista lateral
+ * con información como imagen, descripción, notas
+ * y cantidad de unidades por turno.
+ * 
+ * @param {Object} properties - Propiedades de la ruta (id, name, desc, notes, etc.)
+ * @function addRouteToList
+ */
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -159,12 +209,22 @@ function addRouteToList(properties) {
   routesContainer.appendChild(routeItem);
 }
 
-// Actualizar estadísticas
+/**
+ * Actualiza las estadísticas globales de la aplicación,
+ * mostrando número total de rutas y paradas.
+ * 
+ * @function updateStats
+ */
 function updateStats() {
   const totalRoutes = window.routesData.features.length;
   const totalStops = window.stopsData.features.length;
 
-  // Función auxiliar para actualizar elementos
+  /**
+   * Función auxiliar que actualiza un elemento del DOM.
+   * 
+   * @param {string} id - ID del elemento a actualizar
+   * @param {number} value - Valor a asignar
+   */
   const updateElement = (id, value) => {
     const element = document.getElementById(id);
     if (element) element.textContent = value;
@@ -178,7 +238,11 @@ function updateStats() {
   updateElement('stats-total-stops', totalStops);
 }
 
-// --- Manejo de login local ---
+/**
+ * Manejo de login local con almacenamiento en `localStorage`.
+ * Si hay un usuario guardado, se muestra su información
+ * y la opción de cerrar sesión.
+ */
 const authArea = document.getElementById("auth-area");
 const usuario = localStorage.getItem("usuario");
 
@@ -191,6 +255,12 @@ if (usuario && authArea) {
   `;
 }
 
+/**
+ * Cierra la sesión del usuario eliminando
+ * su información de `localStorage` y recargando la página.
+ * 
+ * @function cerrarSesion
+ */
 function cerrarSesion() {
   localStorage.removeItem("usuario");
   window.location.reload();
@@ -200,12 +270,12 @@ function cerrarSesion() {
 function setupSearchFunctionality() {
   const searchInput = document.getElementById('search-place');
   const searchButton = document.getElementById('search-button');
-  
+
   // Evento para el botón de búsqueda
   searchButton.addEventListener('click', performSearch);
-  
+
   // Evento para la tecla Enter en el input
-  searchInput.addEventListener('keypress', function(e) {
+  searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       performSearch();
     }
@@ -215,20 +285,20 @@ function setupSearchFunctionality() {
 // Realizar la búsqueda
 async function performSearch() {
   const searchTerm = document.getElementById('search-place').value.trim();
-  
+
   if (!searchTerm) {
     alert('Por favor, ingresa un lugar para buscar');
     return;
   }
-  
+
   try {
     // Primero intentamos geocodificar el término de búsqueda
     const location = await geocodeSearchTerm(searchTerm);
-    
+
     if (location) {
       // Centrar el mapa en la ubicación encontrada
       map.setView([location.lat, location.lng], 16);
-      
+
       // Buscar rutas cercanas a esta ubicación
       findRoutesNearLocation(location);
     } else {
@@ -246,7 +316,7 @@ async function geocodeSearchTerm(searchTerm) {
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm + ', Xalapa, Veracruz')}&limit=1`);
     const data = await response.json();
-    
+
     if (data && data.length > 0) {
       return {
         lat: parseFloat(data[0].lat),
@@ -265,10 +335,10 @@ async function geocodeSearchTerm(searchTerm) {
 function findRoutesNearLocation(location) {
   const searchTerm = document.getElementById('search-place').value.trim();
   const proximityThreshold = 500; // metros
-  
+
   // Resaltar paradas en el rango
   highlightStopsInRange(location, proximityThreshold);
-  
+
   // Encontrar paradas cercanas
   const nearbyStops = allStopLayers.filter(stop => {
     const distance = calculateDistance(
@@ -277,10 +347,10 @@ function findRoutesNearLocation(location) {
     );
     return distance <= proximityThreshold;
   });
-  
+
   // Obtener IDs de rutas únicas de las paradas cercanas
   const nearbyRouteIds = [...new Set(nearbyStops.map(stop => stop.routeId))];
-  
+
   if (nearbyRouteIds.length > 0) {
     // Mostrar las rutas cercanas
     showSearchResults(nearbyRouteIds, `Rutas cerca de: ${location.displayName || 'tu búsqueda'}`);
@@ -295,18 +365,18 @@ function findRoutesNearLocation(location) {
 function searchInRouteData(searchTerm) {
   const term = searchTerm.toLowerCase();
   const matchingRoutes = [];
-  
+
   // Buscar en nombres y descripciones de rutas
   window.routesData.features.forEach(feature => {
     const props = feature.properties;
     const nameMatch = props.name && props.name.toLowerCase().includes(term);
     const descMatch = props.desc && props.desc.toLowerCase().includes(term);
-    
+
     if (nameMatch || descMatch) {
       matchingRoutes.push(props.id);
     }
   });
-  
+
   if (matchingRoutes.length > 0) {
     showSearchResults(matchingRoutes, `Rutas relacionadas con: ${searchTerm}`);
   } else {
@@ -320,7 +390,7 @@ function searchInRouteData(searchTerm) {
 function showSearchResults(routeIds, title) {
   // Crear un elemento para mostrar el título de los resultados
   const routesContainer = document.getElementById('routes-container');
-  routesContainer.innerHTML = '';  
+  routesContainer.innerHTML = '';
   const resultsHeader = document.createElement('div');
   resultsHeader.className = 'search-results-header';
   resultsHeader.innerHTML = `
@@ -330,45 +400,45 @@ function showSearchResults(routeIds, title) {
     </button>
   `;
   routesContainer.appendChild(resultsHeader);
-  
+
   // Añadir evento para limpiar búsqueda
   document.getElementById('clear-search').addEventListener('click', () => {
     document.getElementById('search-place').value = '';
     populateRoutesList();
     selectRoute('all');
   });
-  
+
   // Mostrar solo las rutas que coinciden
   window.routesData.features.forEach(feature => {
     if (routeIds.includes(feature.properties.id)) {
       addRouteToList(feature.properties);
     }
   });
-  
+
   // Seleccionar la primera ruta de los resultados o mostrar todas
   if (routeIds.length > 0) {
     selectRoute(routeIds[0]);
   }
 
   // Llamada borrar zona; actualiza la pantalla sin el filtro de busqueda.
- document.getElementById('clear-search').addEventListener('click', () => {
+  document.getElementById('clear-search').addEventListener('click', () => {
     document.getElementById('search-place').value = '';
     populateRoutesList();
     selectRoute('all');
-    clearHighlightedStops(); 
+    clearHighlightedStops();
   });
 
 }
 
 
- //Resalta las paradas dentro de un radio específico de una ubicación
+//Resalta las paradas dentro de un radio específico de una ubicación
 function highlightStopsInRange(location, radius = 500) {
   // Limpiar resaltados anteriores
   clearHighlightedStops();
-  
+
   // Crear o actualizar el círculo de proximidad de búsqueda
   updateSearchProximityCircle(location, radius);
-  
+
   // Encontrar y resaltar paradas dentro del rango
   const stopsInRange = allStopLayers.filter(stop => {
     const distance = calculateDistance(
@@ -377,16 +447,16 @@ function highlightStopsInRange(location, radius = 500) {
     );
     return distance <= radius;
   });
-  
+
   // Resaltar las paradas encontradas
   stopsInRange.forEach(stop => {
     // Cambiar el icono a uno resaltado
     const highlightIcon = createHighlightedStopIcon('#e74c3c');
     stop.marker.setIcon(highlightIcon);
-    
+
     // Añadir a la lista de paradas resaltadas
     highlightedStops.push(stop);
-    
+
     // Abrir popup para la parada más cercana
     if (stopsInRange.length > 0) {
       const closestStop = stopsInRange.reduce((prev, curr) => {
@@ -394,11 +464,11 @@ function highlightStopsInRange(location, radius = 500) {
         const currDist = calculateDistance(location.lat, location.lng, curr.coordinates[0], curr.coordinates[1]);
         return prevDist < currDist ? prev : curr;
       });
-      
+
       closestStop.marker.openPopup();
     }
   });
-  
+
   // También resaltar en la lista del panel lateral
   highlightStopsInList(stopsInRange.map(stop => stop.id));
 }
@@ -445,7 +515,7 @@ function updateSearchProximityCircle(location, radius) {
   if (searchProximityCircle) {
     map.removeLayer(searchProximityCircle);
   }
-  
+
   // Crear nuevo círculo de búsqueda
   searchProximityCircle = L.circle([location.lat, location.lng], {
     color: '#e74c3c',
@@ -454,7 +524,7 @@ function updateSearchProximityCircle(location, radius) {
     weight: 2,
     radius: radius
   }).addTo(map);
-  
+
   // Añadir tooltip al círculo
   searchProximityCircle.bindTooltip(
     `Radio de búsqueda: ${radius}m`,
@@ -470,7 +540,7 @@ function highlightStopsInList(stopIds) {
     item.style.backgroundColor = 'white';
     item.style.borderLeft = 'none';
   });
-  
+
   // Resaltar las paradas que están en el rango
   stopIds.forEach(id => {
     const stopItem = document.querySelector(`.stop-item[data-id="${id}"]`);
@@ -489,16 +559,16 @@ function clearHighlightedStops() {
     const color = route ? route.properties.color : '#f39c12';
     stop.marker.setIcon(createStopIcon(color));
   });
-  
+
   // Limpiar la lista
   highlightedStops = [];
-  
+
   // Eliminar el círculo de proximidad de búsqueda
   if (searchProximityCircle) {
     map.removeLayer(searchProximityCircle);
     searchProximityCircle = null;
   }
-  
+
   // Quitar resaltados de la lista
   document.querySelectorAll('.stop-item').forEach(item => {
     item.style.backgroundColor = 'white';
