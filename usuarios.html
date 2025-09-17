@@ -22,21 +22,21 @@
       <h3><i class="fas fa-user-plus"></i> Registro de Usuario</h3>
 
       <!-- Formulario de Registro -->
-      <form action="guardar_usuario.php" method="POST" style="display:flex; flex-direction:column; gap:15px;">
+      <form id="registerForm" style="display:flex; flex-direction:column; gap:15px;">
         
         <div>
           <label for="usuario">Nombre de usuario:</label>
-          <input type="text" id="usuario" name="usuario" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+          <input type="text" id="usuario" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div>
           <label for="correo">Correo electrónico:</label>
-          <input type="email" id="correo" name="correo" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+          <input type="email" id="correo" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <div>
           <label for="password">Contraseña:</label>
-          <input type="password" id="password" name="password" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
+          <input type="password" id="password" required style="width:100%; padding:0.6rem; border:1px solid #ddd; border-radius:6px;">
         </div>
 
         <button type="submit" style="padding:0.8rem; background:#2c5aa0; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
@@ -45,6 +45,31 @@
       </form>
     </div>
   </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const usuario = document.getElementById("usuario").value;
+      const correo = document.getElementById("correo").value;
+      const password = document.getElementById("password").value;
+
+      // Obtener usuarios existentes o crear array vacío
+      let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+      // Verificar si ya existe
+      if (usuarios.find(u => u.usuario === usuario)) {
+        alert("El usuario ya existe 🚫");
+        return;
+      }
+
+      // Agregar nuevo usuario
+      usuarios.push({ usuario, correo, password });
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+      alert("Usuario registrado ✅");
+      window.location.href = "../InicioSesion/login.html";
+    });
+  </script>
 </body>
 </html>
-
