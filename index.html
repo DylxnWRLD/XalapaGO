@@ -22,7 +22,7 @@ session_start(); // Inicia la sesión
     <div id="auth-area" class="auth-area">
         <?php if (isset($_SESSION["usuario"])): ?>
             <span> <?php echo htmlspecialchars($_SESSION["usuario"]); ?></span>
-            <a href="usuarios.html">Registrar Usuario</a>
+            <a href="InicioSesion/usuarios.html">Registrar Usuario</a>
         <?php else: ?>
             <a href="InicioSesion/login.html">Iniciar sesión</a>
         <?php endif; ?>
