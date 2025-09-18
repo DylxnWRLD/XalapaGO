@@ -29,13 +29,31 @@ let selectedDestination = null;     // Información del destino seleccionado
 // =============================================
 
 /**
- * Inicializa el mapa Leaflet con configuración básica y capas base
+ * Inicializa el mapa Leaflet con configuración básica, capas base y límites geográficos
  */
 function initMap() {
-  // Crear mapa centrado en Veracruz, México con zoom inicial 13
-  map = L.map('map').setView([19.54, -96.91], 13);
-  
-  // Configurar capas base disponibles
+  // Definir los límites geográficos para Xalapa y sus alrededores
+  // Coordenadas aproximadas que cubren Xalapa y zona metropolitana
+  const xalapaBounds = L.latLngBounds(
+    [19.45, -96.98], // Esquina suroeste (lat, lng)
+    [19.65, -96.82]  // Esquina noreste (lat, lng)
+  );
+
+  // Crear mapa centrado en Xalapa con límites geográficos
+  map = L.map('map', {
+    center: [19.54, -96.91],
+    zoom: 13,
+    maxBounds: xalapaBounds,           // Límites del área visible
+    maxBoundsViscosity: 1.0,          // Qué tan "pegajosos" son los límites (1.0 = muy restrictivo)
+    minZoom: 11,                      // Zoom mínimo (vista general de Xalapa)
+    maxZoom: 18,                      // Zoom máximo (vista detallada)
+    zoomControl: true,                // Mantener controles de zoom
+    scrollWheelZoom: true,            // Permitir zoom con rueda del ratón
+    doubleClickZoom: true,            // Permitir zoom con doble clic
+    touchZoom: true                   // Permitir zoom táctil en móviles
+  });
+
+  // Configurar capas base disponibles con límites aplicados
   baseLayers = {
     "Standard": createTileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -50,15 +68,23 @@ function initMap() {
       '&copy; OpenStreetMap contributors &copy; CARTO'
     )
   };
-  
+
   // Añadir capa base por defecto
   baseLayers.Standard.addTo(map);
-  
+
   // Configurar eventos para actualizar visibilidad según zoom
-  map.on('zoomend', function() {
+  map.on('zoomend', function () {
     updateNearestStopVisibility();
     updateDestinationVisibility();
   });
+
+  // Evento opcional: mostrar alerta si el usuario intenta salir de los límites
+  map.on('drag', function () {
+    map.panInsideBounds(xalapaBounds, { animate: false });
+  });
+
+  // Ajustar la vista inicial para mostrar toda el área permitida
+  map.fitBounds(xalapaBounds);
 }
 
 // =============================================
@@ -112,21 +138,21 @@ function loadRoutes() {
   clearLayers(routeLayers);
   routeLayers = [];
   allRouteLayers = [];
-  
+
   // Procesar cada ruta del dataset
   window.routesData.features.forEach(feature => {
     const routeLayer = createRouteLayer(feature);
-    
+
     // Guardar referencia a la capa para uso futuro
     allRouteLayers.push({
       id: feature.properties.id,
       layer: routeLayer
     });
   });
-  
+
   // Mostrar todas las rutas inicialmente
   showAllRoutes();
-  
+
   // Ajustar vista del mapa para mostrar todas las rutas
   if (allRouteLayers.length > 0) {
     const group = L.featureGroup(allRouteLayers.map(r => r.layer));
@@ -179,7 +205,7 @@ function showAllRoutes() {
   // Limpiar rutas actuales
   clearLayers(routeLayers);
   routeLayers = [];
-  
+
   // Añadir todas las rutas al mapa
   allRouteLayers.forEach(route => {
     route.layer.addTo(map);
@@ -195,7 +221,7 @@ function showSingleRoute(routeId) {
   // Limpiar rutas actuales
   clearLayers(routeLayers);
   routeLayers = [];
-  
+
   // Buscar y mostrar la ruta específica
   const route = allRouteLayers.find(r => r.id === routeId);
   if (route) {
@@ -238,9 +264,9 @@ function createDestinationMarker(coordinates, stopData) {
  */
 function updateDestinationVisibility() {
   if (!destinationMarker || !selectedDestination) return;
-  
+
   const currentZoom = map.getZoom();
-  
+
   // Mostrar/ocultar según el zoom para evitar interferencia visual
   if (currentZoom >= 15) {
     if (!map.hasLayer(destinationMarker)) {
@@ -272,12 +298,12 @@ function setDestination(stopId) {
 
   // Crear nuevo marcador de destino con etiqueta horizontal
   destinationMarker = createDestinationMarker(stopData.coordinates, stopData);
-  
+
   // Agregar popup con información de destino
   const routeData = window.routesData.features.find(r => r.properties.id === stopData.routeId);
   const routeColor = routeData ? routeData.properties.color : '#f39c12';
   const routeName = routeData ? routeData.properties.name : 'Desconocida';
-  
+
   const popupContent = `
     <div class="destination-popup">
       <h3 class="destination-popup-title">DESTINO FINAL</h3>
@@ -292,15 +318,15 @@ function setDestination(stopId) {
       </div>
     </div>
   `;
-  
+
   destinationMarker.bindPopup(popupContent);
-  
+
   // Solo agregar al mapa si el zoom es apropiado
   const currentZoom = map.getZoom();
   if (currentZoom >= 14) {
     destinationMarker.addTo(map);
   }
-  
+
   // Guardar información del destino
   selectedDestination = {
     id: stopId,
@@ -322,7 +348,7 @@ function clearDestination() {
     map.removeLayer(destinationMarker);
     destinationMarker = null;
   }
-  
+
   if (selectedDestination) {
     // Restaurar popup original de la parada
     updateStopPopupWithDestination(selectedDestination.id, false);
@@ -367,7 +393,7 @@ function updateStopPopupWithDestination(stopId, isDestination = true) {
   }
 
   popupContent += `</div>`;
-  
+
   // Actualizar el popup del marcador
   stopData.marker.setPopupContent(popupContent);
 }
@@ -384,23 +410,23 @@ function loadStops() {
   clearLayers(stopLayers);
   stopLayers = [];
   allStopLayers = [];
-  
+
   // Limpiar lista de paradas en el panel lateral
   const stopsContainer = document.getElementById('stops-container');
   stopsContainer.innerHTML = '';
-  
+
   // Procesar cada parada del dataset
   window.stopsData.features.forEach(feature => {
     const stop = feature;
     const routeId = stop.properties.routeId;
-    
+
     // Obtener color de la ruta correspondiente
     const route = window.routesData.features.find(r => r.properties.id === routeId);
     const color = route ? route.properties.color : '#f39c12';
-    
+
     // Crear marcador con funcionalidad de destino
     const marker = createStopMarker(stop, color);
-    
+
     // Guardar referencia a la capa
     allStopLayers.push({
       id: stop.properties.id,
@@ -410,14 +436,14 @@ function loadStops() {
       properties: stop.properties,
       coordinates: [stop.geometry.coordinates[1], stop.geometry.coordinates[0]]
     });
-    
+
     // Añadir a la lista en el panel lateral
     addStopToList(stop.properties, color);
-    
+
     // Configurar evento para resaltar la parada al hacer clic
     marker.on('click', () => highlightStop(stop.properties.id));
   });
-  
+
   // Mostrar todas las paradas inicialmente
   showAllStops();
 }
@@ -433,11 +459,11 @@ function createStopMarker(stop, color) {
     [stop.geometry.coordinates[1], stop.geometry.coordinates[0]],
     { icon: createStopIcon(color) }
   );
-  
+
   // Obtener datos de la ruta
   const routeData = window.routesData.features.find(r => r.properties.id === stop.properties.routeId);
   const routeName = routeData ? routeData.properties.name : 'Desconocida';
-  
+
   // Contenido del popup con botón de destino
   const popupContent = `
     <div class="stop-popup">
@@ -448,7 +474,7 @@ function createStopMarker(stop, color) {
       </div>
     </div>
   `;
-  
+
   marker.bindPopup(popupContent);
   return marker;
 }
@@ -460,7 +486,7 @@ function showAllStops() {
   // Limpiar paradas actuales
   clearLayers(stopLayers);
   stopLayers = [];
-  
+
   // Añadir todas las paradas al mapa
   allStopLayers.forEach(stop => {
     stop.marker.addTo(map);
@@ -476,7 +502,7 @@ function showSingleRouteStops(routeId) {
   // Limpiar paradas actuales
   clearLayers(stopLayers);
   stopLayers = [];
-  
+
   // Filtrar y mostrar solo paradas de la ruta especificada
   allStopLayers.forEach(stop => {
     if (stop.routeId === routeId) {
@@ -499,15 +525,15 @@ function changeMapStyle(style) {
   Object.values(baseLayers).forEach(layer => {
     map.removeLayer(layer);
   });
-  
+
   // Añadir la capa seleccionada
   baseLayers[style].addTo(map);
-  
+
   // Actualizar estado visual de los botones
   document.querySelectorAll('.style-button').forEach(btn => {
     btn.classList.remove('active');
   });
-  
+
   const styleButton = document.getElementById(`style-${style.toLowerCase()}`);
   if (styleButton) {
     styleButton.classList.add('active');
@@ -527,7 +553,7 @@ function selectRoute(routeId) {
       const shouldKeep = confirm(
         `Tu destino actual está en la ruta "${destinationRoute}" pero has seleccionado la ruta "${routeId}". ¿Deseas mantener el destino actual?`
       );
-      
+
       if (!shouldKeep) {
         clearDestination();
       }
@@ -546,7 +572,7 @@ function selectRoute(routeId) {
   if (routeId === 'all') {
     showAllRoutes();
     showAllStops();
-    
+
     // Ajustar vista para mostrar todas las rutas
     if (allRouteLayers.length > 0) {
       const group = L.featureGroup(allRouteLayers.map(r => r.layer));
@@ -559,7 +585,7 @@ function selectRoute(routeId) {
 
   // Actualizar lista de paradas en el panel lateral
   updateStopsList(routeId);
-  
+
   // Actualizar parada más cercana si hay ubicación del usuario
   if (currentUserLocation) {
     updateNearestStop();
@@ -608,7 +634,7 @@ function addStopToList(properties, color) {
   `;
 
   // Configurar evento para centrar mapa en la parada al hacer clic
-  stopItem.addEventListener('click', function() {
+  stopItem.addEventListener('click', function () {
     highlightStop(properties.id);
     const stopLayer = allStopLayers.find(s => s.id === properties.id);
     if (stopLayer) {
@@ -693,11 +719,11 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
   const R = 6371000; // Radio de la Tierra en metros
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng/2) * Math.sin(dLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distancia en metros
 }
 
@@ -711,7 +737,7 @@ function updateProximityCircle(lat, lng) {
   if (userLocationCircle) {
     map.removeLayer(userLocationCircle);
   }
-  
+
   // Crear nuevo círculo de 500 metros
   userLocationCircle = L.circle([lat, lng], {
     color: '#3498db',
@@ -730,32 +756,32 @@ function updateProximityCircle(lat, lng) {
  */
 function findNearestStop(userLat, userLng) {
   let relevantStops = [];
-  
+
   // Filtrar paradas según la ruta seleccionada
   if (selectedRoute === 'all') {
     relevantStops = allStopLayers;
   } else {
     relevantStops = allStopLayers.filter(stop => stop.routeId === selectedRoute);
   }
-  
+
   if (relevantStops.length === 0) return null;
-  
+
   // Calcular distancias y encontrar la más cercana
   let nearestStop = null;
   let minDistance = Infinity;
-  
+
   relevantStops.forEach(stop => {
     const distance = calculateDistance(
       userLat, userLng,
       stop.coordinates[0], stop.coordinates[1]
     );
-    
+
     if (distance < minDistance) {
       minDistance = distance;
       nearestStop = stop;
     }
   });
-  
+
   return { stop: nearestStop, distance: minDistance };
 }
 
@@ -767,7 +793,7 @@ function findNearestStop(userLat, userLng) {
  */
 function createNearestStopMarker(stop, distance) {
   const routeColor = window.routesData.features.find(r => r.properties.id === stop.routeId)?.properties.color ?? '#f39c12';
-  
+
   return L.marker(stop.coordinates, {
     icon: L.divIcon({
       className: 'nearest-stop-marker',
@@ -791,9 +817,9 @@ function createNearestStopMarker(stop, distance) {
  */
 function updateNearestStopVisibility() {
   if (!nearestStopMarker || !currentUserLocation) return;
-  
+
   const currentZoom = map.getZoom();
-  
+
   // Solo mostrar el marcador especial cuando el zoom sea 15 o mayor
   if (currentZoom >= 15) {
     if (!map.hasLayer(nearestStopMarker)) {
@@ -811,25 +837,25 @@ function updateNearestStopVisibility() {
  */
 function updateNearestStop() {
   if (!currentUserLocation) return;
-  
+
   // Remover marcador anterior de parada más cercana
   if (nearestStopMarker) {
     map.removeLayer(nearestStopMarker);
     nearestStopMarker = null;
   }
-  
+
   // Encontrar la parada más cercana
   const result = findNearestStop(currentUserLocation.lat, currentUserLocation.lng);
-  
+
   if (result && result.distance <= 500) { // Solo mostrar si está dentro de 500m
     nearestStopMarker = createNearestStopMarker(result.stop, result.distance);
-    
+
     // Solo agregar al mapa si el zoom es apropiado
     const currentZoom = map.getZoom();
     if (currentZoom >= 14) {
       nearestStopMarker.addTo(map);
     }
-    
+
     // Agregar popup con información detallada
     const popupContent = `
       <div class="nearest-stop-popup">
@@ -853,10 +879,10 @@ function enableUserLocation() {
   // Usar la API de Geolocation del navegador
   if (navigator.geolocation) {
     navigator.geolocation.watchPosition(
-      function(position) {
+      function (position) {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
+
         // Guardar ubicación actual
         currentUserLocation = { lat, lng };
 
@@ -878,17 +904,25 @@ function enableUserLocation() {
             })
           }).addTo(map);
 
+          // Agregar evento de clic para hacer zoom a la ubicación
+          window.userMarker.on('click', function () {
+            map.setView([lat, lng], 17, {
+              animate: true,
+              duration: 0.5
+            });
+          });
+
           // Hacer zoom a la ubicación la primera vez
           map.setView([lat, lng], 15);
         }
-        
+
         // Actualizar círculo de proximidad
         updateProximityCircle(lat, lng);
-        
+
         // Actualizar parada más cercana
         updateNearestStop();
       },
-      function(error) {
+      function (error) {
         console.error("Error al obtener ubicación:", error);
         alert("No se pudo obtener tu ubicación.");
       },
