@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Login - XalapaGO</title>
   <link rel="stylesheet" href="../styles.css">
 </head>
+
 <body>
   <div class="header">
     <h1><i class="fas fa-bus"></i> XalapaGO</h1>
@@ -34,9 +36,8 @@
         </button>
 
         <!-- Botón para ir al login de administrador -->
-        <button type="button" onclick="window.location.href='loginAdmin.html'" 
-                class="style-button active" 
-                style="width:100%; margin-top:10px;">
+        <button type="button" onclick="window.location.href='loginAdmin.html'" class="style-button active"
+          style="width:100%; margin-top:10px;">
           Entrar como Administrador
         </button>
       </form>
@@ -44,24 +45,34 @@
   </div>
 
   <script>
-    // Recuperar usuarios del localStorage
-    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-
-    document.getElementById("loginForm").addEventListener("submit", function(e) {
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const user = document.getElementById("usuario").value;
       const pass = document.getElementById("password").value;
 
-      const encontrado = usuarios.find(u => u.usuario === user && u.password === pass);
+      try {
+        const res = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usuario: user, password: pass })
+        });
 
-      if (encontrado) {
-        localStorage.setItem("usuarioActivo", user);
-        window.location.href = "../index.html";
-      } else {
-        alert("Usuario o contraseña incorrectos 🚫");
+        const data = await res.json();
+
+        if (res.ok) {
+          // Usar el mensaje que viene desde el backend
+          alert(data.message); // Bienvenido <usuario>
+          localStorage.setItem("token", data.token);
+          window.location.href = "../index.html";
+        } else {
+          alert(data.message || "Usuario o contraseña incorrectos 🚫");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Error de conexion con el servidor");
       }
     });
   </script>
 </body>
-</html>
 
+</html>

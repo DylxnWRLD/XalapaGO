@@ -47,28 +47,30 @@
   </div>
 
   <script>
-    document.getElementById("registerForm").addEventListener("submit", function(e) {
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
       const usuario = document.getElementById("usuario").value;
       const correo = document.getElementById("correo").value;
       const password = document.getElementById("password").value;
 
-      // Obtener usuarios existentes o crear array vacío
-      let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+      try {
+        const res = await fetch("http://localhost:3000/registroUsuario", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usuario, correo, password })
+        });
 
-      // Verificar si ya existe
-      if (usuarios.find(u => u.usuario === usuario)) {
-        alert("El usuario ya existe 🚫");
-        return;
+        const msg = await res.text();
+        alert(msg);
+
+        if (res.ok) {
+          // Si el registro fue exitoso, ir al login
+          window.location.href = "../InicioSesion/login.html";
+        }
+      } catch (err) {
+        alert("❌ Error al conectar con el servidor");
       }
-
-      // Agregar nuevo usuario
-      usuarios.push({ usuario, correo, password });
-      localStorage.setItem("usuarios", JSON.stringify(usuarios));
-
-      alert("Usuario registrado ✅");
-      window.location.href = "../InicioSesion/login.html";
     });
   </script>
 </body>
