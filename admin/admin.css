@@ -198,3 +198,23 @@ button:hover {
     /* Altura mínima del 100% de su contenedor */
     min-height: 100%;
 }
+
+/*
+* ===============================================
+* ESTILO DE BOTON
+*/
+.auth-btn {
+  background-color: #6299d3; /* Azul estilo "bootstrap" */
+  color: white;
+  padding: 10px 18px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.auth-btn:hover {
+  background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+}
