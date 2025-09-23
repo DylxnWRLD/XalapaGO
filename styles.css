@@ -789,7 +789,7 @@ body {
 
 /* Estilo general de los botones de login/registro */
 .auth-btn {
-  background-color: #408cdc; /* Azul estilo "bootstrap" */
+  background-color: #107cef; /* Azul estilo "bootstrap" */
   color: white;
   padding: 10px 18px;
   text-decoration: none;
