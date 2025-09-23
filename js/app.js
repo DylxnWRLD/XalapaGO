@@ -179,11 +179,54 @@ function populateRoutesList() {
     <h4><i class="fas fa-layer-group"></i> Todas las rutas</h4>
     <p>Ver todas las rutas y paradas</p>
   `;
-  allItem.addEventListener('click', () => selectRoute('all'));
+  allItem.addEventListener('click', () => {
+    // Cuando el usuario hace clic en "Todas las rutas", se limpia cualquier búsqueda previa
+    document.getElementById('search-place').value = '';
+    selectRoute('all');
+    clearHighlightedStops();
+  });
   routesContainer.appendChild(allItem);
 
-  // Rutas individuales
+  // Separar las rutas fijadas de las no fijadas
+  const fixedRouteFeatures = [];
+  const unfixedRouteFeatures = [];
+
   window.routesData.features.forEach(feature => {
+    if (fixedRoutes.includes(feature.properties.id)) {
+      fixedRouteFeatures.push(feature);
+    } else {
+      unfixedRouteFeatures.push(feature);
+    }
+  });
+
+  // Primero, agregar las rutas fijadas
+  if (fixedRouteFeatures.length > 0) {
+    const fixedHeaderContainer = document.createElement('div');
+    fixedHeaderContainer.className = 'fixed-header-container';
+    fixedHeaderContainer.innerHTML = `
+      <h5>Rutas Fijadas</h5>
+      <button id="unpin-all-btn" class="unpin-all-btn">
+        <i class="fas fa-thumbtack"></i> Desfijar todo
+      </button>
+    `;
+    routesContainer.appendChild(fixedHeaderContainer);
+    
+    // Añadir el evento al botón de desfijar
+    document.getElementById('unpin-all-btn').addEventListener('click', () => {
+        clearFixedRoutes(); // Llama a la función para limpiar todas las rutas fijadas
+        populateRoutesList(); // Re-renderiza la lista para actualizar la vista
+    });
+
+    fixedRouteFeatures.forEach(feature => {
+      addRouteToList(feature.properties);
+    });
+  }
+
+  // Luego, agregar el resto de las rutas
+  const allHeader = document.createElement('h5');
+  allHeader.textContent = 'Todas las Rutas';
+  routesContainer.appendChild(allHeader);
+  unfixedRouteFeatures.forEach(feature => {
     addRouteToList(feature.properties);
   });
 }
@@ -299,6 +342,14 @@ async function performSearch() {
     return;
   }
 
+  // Limpiar el mapa antes de cada nueva búsqueda
+  selectRoute('none'); // Desactiva cualquier selección previa
+  clearHighlightedStops(); // Limpia los puntos resaltados
+
+  // Limpiar la lista de rutas para evitar superposición
+  const routesContainer = document.getElementById('routes-container');
+  routesContainer.innerHTML = '';
+
   try {
     // Primero intentamos geocodificar el término de búsqueda
     const location = await geocodeSearchTerm(searchTerm);
@@ -401,11 +452,16 @@ function searchInRouteData(searchTerm) {
   }
 }
 
+// Array global para rutas fijadas
+let fixedRoutes = [];
+//Lista para paradas
+let fixedStopsLayers = {};
+
 // Mostrar resultados de búsqueda
 function showSearchResults(routeIds, title) {
-  // Crear un elemento para mostrar el título de los resultados
   const routesContainer = document.getElementById('routes-container');
   routesContainer.innerHTML = '';
+
   const resultsHeader = document.createElement('div');
   resultsHeader.className = 'search-results-header';
   resultsHeader.innerHTML = `
@@ -416,26 +472,6 @@ function showSearchResults(routeIds, title) {
   `;
   routesContainer.appendChild(resultsHeader);
 
-  // Añadir evento para limpiar búsqueda
-  document.getElementById('clear-search').addEventListener('click', () => {
-    document.getElementById('search-place').value = '';
-    populateRoutesList();
-    selectRoute('all');
-  });
-
-  // Mostrar solo las rutas que coinciden
-  window.routesData.features.forEach(feature => {
-    if (routeIds.includes(feature.properties.id)) {
-      addRouteToList(feature.properties);
-    }
-  });
-
-  // Seleccionar la primera ruta de los resultados o mostrar todas
-  if (routeIds.length > 0) {
-    selectRoute(routeIds[0]);
-  }
-
-  // Llamada borrar zona; actualiza la pantalla sin el filtro de busqueda.
   document.getElementById('clear-search').addEventListener('click', () => {
     document.getElementById('search-place').value = '';
     populateRoutesList();
@@ -443,8 +479,177 @@ function showSearchResults(routeIds, title) {
     clearHighlightedStops();
   });
 
+// Separar las rutas fijadas que coinciden con la búsqueda de las no fijadas
+  const fixedMatches = [];
+  const unfixedMatches = [];
+
+  window.routesData.features.forEach(feature => {
+    if (routeIds.includes(feature.properties.id)) {
+      if (fixedRoutes.includes(feature.properties.id)) {
+        fixedMatches.push(feature);
+      } else {
+        unfixedMatches.push(feature);
+      }
+    }
+  });
+
+  // Mostrar primero las rutas fijadas que coinciden con la búsqueda
+  if (fixedMatches.length > 0) {
+    const fixedHeader = document.createElement('h5');
+    fixedHeader.textContent = 'Fijadas y Relacionadas';
+    routesContainer.appendChild(fixedHeader);
+    fixedMatches.forEach(feature => addRouteToList(feature.properties));
+  }
+
+  // Luego mostrar las rutas no fijadas que coinciden
+  if (unfixedMatches.length > 0) {
+    const unfixedHeader = document.createElement('h5');
+    unfixedHeader.textContent = 'Resultados de la búsqueda';
+    routesContainer.appendChild(unfixedHeader);
+    unfixedMatches.forEach(feature => addRouteToList(feature.properties));
+  }
 }
 
+function addRouteToList(properties) {
+  const routesContainer = document.getElementById('routes-container');
+  const routeItem = document.createElement('div');
+  routeItem.className = 'route-item';
+  routeItem.dataset.id = properties.id;
+
+  const checked = fixedRoutes.includes(properties.id) ? 'checked' : '';
+
+  routeItem.innerHTML = `
+    <h4><i class="fas fa-route"></i> ${properties.name}</h4>
+    <p>
+      <strong>Imagen:</strong><br>
+      ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
+    </p>
+    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
+    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
+    <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
+    <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${checked}></p>
+  `;
+
+  // Si haces click en el título se selecciona ruta
+  routeItem.querySelector("h4").addEventListener("click", () => {
+    selectRoute(properties.id);
+  });
+
+  // Escuchar checkbox
+  const checkbox = routeItem.querySelector(".fix-route");
+  checkbox.addEventListener("change", (e) => {
+    if (e.target.checked) {
+      // Agregar a fijadas y dibujar en mapa
+      if (!fixedRoutes.includes(properties.id)) {
+        fixedRoutes.push(properties.id);
+        drawRouteOnMap(properties.id);
+        drawStopsOnMap(properties.id);
+      }
+    } else {
+      // Quitar de fijadas y eliminar del mapa
+      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
+      removeRouteFromMap(properties.id);
+      removeStopsFromMap(properties.id);
+    }
+
+    // ¡Re-renderizar la lista para actualizar el orden!
+    populateRoutesList();
+  });
+
+  routesContainer.appendChild(routeItem);
+}
+
+// Objeto global para guardar las capas de cada ruta fijada
+let fixedRoutesLayers = {};
+
+// Función para dibujar la ruta
+function drawRouteOnMap(routeId) {
+  const feature = window.routesData.features.find(f => f.properties.id === routeId);
+  if (!feature) return;
+
+  const color = feature.properties.color || "blue";
+
+  const layer = L.geoJSON(feature, {
+    style: { color, weight: 4 }
+  }).addTo(map);
+
+  fixedRoutesLayers[routeId] = layer;
+}
+
+// Función que dibuja las paradas usando los datos globales de stopsData.
+function drawStopsOnMap(routeId) {
+  // Primero, encuentra las paradas que corresponden a esta ruta.
+  const stopsForRoute = window.stopsData.features.filter(
+    f => f.properties.routeId === routeId
+  );
+
+  if (stopsForRoute.length === 0) return;
+
+  // Obtener el color de la ruta para los íconos de parada.
+  const route = window.routesData.features.find(r => r.properties.id === routeId);
+  const color = route ? route.properties.color : '#f39c12';
+
+  const stopsLayer = L.geoJSON({
+    type: "FeatureCollection",
+    features: stopsForRoute
+  }, {
+    pointToLayer: (feature, latlng) => {
+      return L.marker(latlng, {
+        icon: createStopIcon(color)
+      }).bindPopup(`<b>${feature.properties.name || "Parada"}</b>`);
+    }
+  }).addTo(map);
+
+  // Guardar la capa para poder eliminarla más tarde.
+  fixedStopsLayers[routeId] = stopsLayer;
+}
+
+// Quitar la ruta (línea y paradas) del mapa
+function removeRouteFromMap(routeId) {
+  const layer = fixedRoutesLayers[routeId];
+  if (!layer) return;
+
+  map.removeLayer(layer);
+  delete fixedRoutesLayers[routeId];
+}
+
+function removeStopsFromMap(routeId) {
+  const layer = fixedStopsLayers[routeId];
+  if (!layer) return;
+
+  map.removeLayer(layer);
+  delete fixedStopsLayers[routeId];
+}
+
+/**
+ * Limpia todas las rutas y paradas que han sido fijadas en el mapa.
+ * Restaura el estado de la aplicación.
+ */
+function clearFixedRoutes() {
+  // 1. Eliminar todas las capas de rutas fijadas del mapa
+  for (const routeId in fixedRoutesLayers) {
+    if (fixedRoutesLayers.hasOwnProperty(routeId)) {
+      map.removeLayer(fixedRoutesLayers[routeId]);
+    }
+  }
+  fixedRoutesLayers = {}; // Vacía el objeto de capas
+
+  // 2. Eliminar todas las capas de paradas fijadas del mapa
+  for (const routeId in fixedStopsLayers) {
+    if (fixedStopsLayers.hasOwnProperty(routeId)) {
+      map.removeLayer(fixedStopsLayers[routeId]);
+    }
+  }
+  fixedStopsLayers = {}; // Vacía el objeto de capas
+
+  // 3. Vaciar el arreglo de IDs de rutas fijadas
+  fixedRoutes = [];
+
+  // 4. Asegurarse de que los checkboxes en la lista se desmarquen
+  document.querySelectorAll('.fix-route').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+}
 
 //Resalta las paradas dentro de un radio específico de una ubicación
 function highlightStopsInRange(location, radius = 500) {
