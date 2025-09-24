@@ -1,47 +1,57 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+require("dotenv").config(); // Carga las variables de entorno
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Conectar a MongoDB
-mongoose.connect("mongodb://localhost:27017/XalapaGO", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log("✅ Conectado a MongoDB"))
-  .catch(err => console.error("❌ Error:", err));
+// 🔑 Conectar a MongoDB Atlas
+const mongoURI = process.env.MONGO_URI;
 
-// --- Definir modelo Usuario directamente ---
+// Mongoose ya no necesita las opciones useNewUrlParser y useUnifiedTopology
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ Conectado a MongoDB Atlas"))
+  .catch(err => {
+    console.error("❌ Error de conexión a MongoDB Atlas:", err);
+    process.exit(1); // Sale de la aplicación si no se conecta a la BD
+  });
+
+// --- Definir modelo Usuario ---
 const usuarioSchema = new mongoose.Schema({
   usuario: { type: String, required: true, unique: true },
   correo: { type: String, required: true },
   password: { type: String, required: true },
-  admin: { type: Boolean, default: false } // opcional
+  admin: { type: Boolean, default: false }
 });
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
 
-// Ruta para registrar usuario
+// --- Rutas ---
+
+// Ruta de registro
 app.post("/registroUsuario", async (req, res) => {
   const { usuario, correo, password } = req.body;
 
   try {
     const existe = await Usuario.findOne({ usuario });
-    if (existe) return res.status(400).send("El usuario ya existe 🚫");
+    if (existe) {
+      return res.status(400).send("El usuario ya existe 🚫");
+    }
 
     const nuevo = new Usuario({ usuario, correo, password });
     await nuevo.save();
 
-    res.send("Usuario registrado ✅");
+    res.status(201).send("Usuario registrado ✅");
   } catch (err) {
-    res.status(500).send("Error en el servidor");
+    console.error(err);
+    res.status(500).send("Error en el servidor: " + err.message);
   }
 });
 
-const jwt = require("jsonwebtoken");
-
+// Ruta de login
 app.post("/login", async (req, res) => {
   const { usuario, password } = req.body;
 
@@ -51,11 +61,11 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Usuario o contraseña incorrectos 🚫" });
     }
 
-    // Crear token JWT
+    // Usa una variable de entorno para el secreto de JWT
     const token = jwt.sign(
       { usuario: encontrado.usuario, admin: encontrado.admin },
-      "mi_secreto_super_seguro", // tu secreto para firmar
-      { expiresIn: "1h" } // dura 1 hora
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
     );
 
     res.json({
@@ -70,9 +80,5 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
-
-
-
-
-app.listen(3000, () => console.log("🚀 Servidor corriendo en http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
