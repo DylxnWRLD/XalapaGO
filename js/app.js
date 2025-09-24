@@ -129,17 +129,22 @@ function setupEventListeners() {
   document.getElementById('style-satellite').addEventListener('click', () => changeMapStyle('Satélite'));
   document.getElementById('style-dark').addEventListener('click', () => changeMapStyle('Oscuro'));
 
-  document.getElementById('sidebar-toggle').addEventListener('click', function () {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('hidden');
-    this.innerHTML = sidebar.classList.contains('hidden')
+// --- REEMPLAZA CON ESTA NUEVA VERSIÓN ---
+document.getElementById('sidebar-toggle').addEventListener('click', function () {
+    // Ahora seleccionamos el contenedor principal
+    const container = document.querySelector('.container');
+    // Y añadimos/quitamos la clase en él
+    container.classList.toggle('sidebar-colapsada');
+
+    // La lógica del ícono ahora revisa la clase en el contenedor
+    this.innerHTML = container.classList.contains('sidebar-colapsada')
       ? '<i class="fas fa-bars"></i>'
       : '<i class="fas fa-times"></i>';
-
+    
     setTimeout(() => {
-      map.invalidateSize();
+        map.invalidateSize();
     }, 300);
-  });
+});
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function () {

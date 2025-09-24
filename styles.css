@@ -78,48 +78,58 @@ body {
   z-index: 1;
 }
 
+/* --- ESTE ES EL CÓDIGO CORRECTO Y FINAL --- */
+
 .sidebar {
   width: 350px;
   background: #f8f9fa;
   border-right: 1px solid #ddd;
-  padding: 1rem;
   overflow-y: auto;
-  /* Cambiamos la transición para que se aplique al ancho y al padding */
-  transition: width 0.3s ease, padding 0.3s ease; 
+  transition: width 0.3s ease, padding 0.3s ease;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  /*Evita que el contenido se desborde al colapsar */
-  overflow-x: hidden; 
+  
+  /* --- LÍNEA AÑADIDA --- */
+  /* Añade un espacio de 24px (1.5rem) en todos los lados */
+  padding: 1.5rem; 
 }
 
-.sidebar.hidden {
+/* Ahora reaccionamos a la clase en el PADRE (.container) */
+.container.sidebar-colapsada .sidebar {
   width: 0;
-  padding: 1rem 0; /* Mantenemos padding vertical, quitamos el horizontal */
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .sidebar-toggle {
-    position: absolute;
-    top: 80px;
-    left: 360px;
-    z-index: 1000;
-    transition: left 0.3s ease; 
-
-    background-color: #007bff; /* Color de fondo del botón*/
-    color: white; /* Color del icono */
-    border: none;
-    border-radius: 5px; /* Bordes redondeados */
-    padding: 0.5rem 0.8rem; /* Tamaño del padding */
-    font-size: 1.2rem; /* Tamaño del icono */
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra para dar volumen */
-    display: flex; /* Para centrar el icono si hay padding */
-    align-items: center;
-    justify-content: center;
+  /* ... tus estilos de color, tamaño, etc. ... */
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Posición y animación */
+  position: absolute;
+  top: 68px;
+  z-index: 1000;
+  
+  /* Posición cuando la barra está ABIERTA */
+  left: 360px;
+  transition: left 0.3s ease;
 }
 
-/*Posición del botón cuando la barra está CERRADA */
-.sidebar.hidden + #map + .sidebar-toggle {
+/* Y el botón también reacciona a la clase en el PADRE */
+.container.sidebar-colapsada .sidebar-toggle {
+  /* Posición cuando la barra está CERRADA */
   left: 10px;
 }
 
