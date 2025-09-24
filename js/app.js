@@ -526,7 +526,7 @@ function addRouteToList(properties) {
   routeItem.className = 'route-item';
   routeItem.dataset.id = properties.id;
 
-  const checked = fixedRoutes.includes(properties.id) ? 'checked' : '';
+  const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
   routeItem.innerHTML = `
     <h4><i class="fas fa-route"></i> ${properties.name}</h4>
@@ -537,77 +537,47 @@ function addRouteToList(properties) {
     <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
     <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
     <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
-    <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${checked}></p>
-    <p><strong>Agregar alerta</strong><input type="checkbox" class="alertas-ruta" ${checked}></p>
+    <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${isFixed}></p>
+    <p><strong>Agregar alerta</strong><input type="checkbox" class="alertas-ruta"></p>
     <p class="alert-message" style="font-weight:bold;"></p>
   `;
 
-  // Si haces click en el título se selecciona ruta
-  routeItem.querySelector("h4").addEventListener("click", () => {
-    selectRoute(properties.id);
-  });
-
-   // Escuchar checkbox
-  const checkboxAlertas = routeItem.querySelector(".fix-route");
-  checkboxAlertas.addEventListener("change", (e) => {
+  // Listener para "Fijar ruta"
+  const checkboxFix = routeItem.querySelector(".fix-route");
+  checkboxFix.addEventListener("change", (e) => {
     if (e.target.checked) {
-      // Agregar a fijadas y dibujar en mapa
-      if (!fixedRoutes.includes(properties.id)) {
-        fixedRoutes.push(properties.id);
-        drawRouteOnMap(properties.id);  // <-- aquí llamas tu función que dibuja la ruta
-        drawStopsOnMap(properties.id);  // <-- aquí llamas tu función que dibuja las paradas
-      }
-    } else {
-      // Quitar de fijadas y eliminar del mapa
-      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
-      removeRouteFromMap(properties.id); // <-- función para borrar del mapa
-      removeStopsFromMap(properties.id);
-    }
-  });
-
-  const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
-  checkboxAlerta.addEventListener("change", (e) => {
-    const modal = document.getElementById("alertas");
-
-    if (e.target.checked) {
-      modal.style.display = "flex"; // Mostrar modal
-      modal.dataset.routeId = properties.id; // Guardar id de ruta en modal
-      modal.dataset.routeItemId = routeItem.dataset.id;
-
-      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    } else {
-      modal.style.display = "none";
-      // Reset color si se desmarca
-      routeItem.style.backgroundColor = "";
-      routeItem.querySelector(".alert-message").textContent = "";
-    }
-  });
-
-  routesContainer.appendChild(routeItem);
-
-  // Escuchar checkbox
-  const checkbox = routeItem.querySelector(".fix-route");
-  checkbox.addEventListener("change", (e) => {
-    if (e.target.checked) {
-      // Agregar a fijadas y dibujar en mapa
       if (!fixedRoutes.includes(properties.id)) {
         fixedRoutes.push(properties.id);
         drawRouteOnMap(properties.id);
         drawStopsOnMap(properties.id);
       }
     } else {
-      // Quitar de fijadas y eliminar del mapa
       fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
       removeRouteFromMap(properties.id);
       removeStopsFromMap(properties.id);
     }
+    populateRoutesList(); // actualizar lista
+  });
 
-    // ¡Re-renderizar la lista para actualizar el orden!
-    populateRoutesList();
+  // Listener para "Agregar alerta"
+  const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
+  checkboxAlerta.addEventListener("change", (e) => {
+    const modal = document.getElementById("alertas");
+    if (e.target.checked) {
+      modal.style.display = "flex";
+      modal.dataset.routeId = properties.id;
+      modal.dataset.routeItemId = routeItem.dataset.id;
+      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    } else {
+      modal.style.display = "none";
+      routeItem.style.backgroundColor = "";
+      routeItem.querySelector(".alert-message").textContent = "";
+    }
   });
 
   routesContainer.appendChild(routeItem);
 }
+
 
 
 
