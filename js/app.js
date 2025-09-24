@@ -528,12 +528,52 @@ function addRouteToList(properties) {
     <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
     <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
     <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${checked}></p>
+    <p><strong>Agregar alerta</strong><input type="checkbox" class="alertas-ruta" ${checked}></p>
+    <p class="alert-message" style="font-weight:bold;"></p>
   `;
 
   // Si haces click en el título se selecciona ruta
   routeItem.querySelector("h4").addEventListener("click", () => {
     selectRoute(properties.id);
   });
+
+   // Escuchar checkbox
+  const checkboxAlertas = routeItem.querySelector(".fix-route");
+  checkboxAlertas.addEventListener("change", (e) => {
+    if (e.target.checked) {
+      // Agregar a fijadas y dibujar en mapa
+      if (!fixedRoutes.includes(properties.id)) {
+        fixedRoutes.push(properties.id);
+        drawRouteOnMap(properties.id);  // <-- aquí llamas tu función que dibuja la ruta
+        drawStopsOnMap(properties.id);  // <-- aquí llamas tu función que dibuja las paradas
+      }
+    } else {
+      // Quitar de fijadas y eliminar del mapa
+      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
+      removeRouteFromMap(properties.id); // <-- función para borrar del mapa
+      removeStopsFromMap(properties.id);
+    }
+  });
+
+  const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
+  checkboxAlerta.addEventListener("change", (e) => {
+    const modal = document.getElementById("alertas");
+
+    if (e.target.checked) {
+      modal.style.display = "flex"; // Mostrar modal
+      modal.dataset.routeId = properties.id; // Guardar id de ruta en modal
+      modal.dataset.routeItemId = routeItem.dataset.id;
+
+      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    } else {
+      modal.style.display = "none";
+      // Reset color si se desmarca
+      routeItem.style.backgroundColor = "";
+      routeItem.querySelector(".alert-message").textContent = "";
+    }
+  });
+
+  routesContainer.appendChild(routeItem);
 
   // Escuchar checkbox
   const checkbox = routeItem.querySelector(".fix-route");
@@ -559,22 +599,66 @@ function addRouteToList(properties) {
   routesContainer.appendChild(routeItem);
 }
 
-// Objeto global para guardar las capas de cada ruta fijada
-let fixedRoutesLayers = {};
 
-// Función para dibujar la ruta
+
+
+document.getElementById("guardar-alerta").addEventListener("click", () => {
+  const modal = document.getElementById("alertas");
+  const routeId = modal.dataset.routeId;
+  const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
+  const alertMessage = routeItem.querySelector(".alert-message");
+
+  // Detectar qué alerta está seleccionada
+  const trafico = document.getElementById("a-trafico").checked;
+  const construccion = document.getElementById("a-construccion").checked;
+  const bloqueo = document.getElementById("a-bloqueo").checked;
+
+  // Reset color
+  routeItem.style.backgroundColor = "";
+  alertMessage.textContent = "";
+
+  if (trafico) {
+    routeItem.style.backgroundColor = '#f4f472ff';
+    alertMessage.textContent = "🚦 Tráfico";
+  } else if (construccion) {
+    routeItem.style.backgroundColor =' #f3c171ff';
+    alertMessage.textContent = "🚧 En construcción";
+  } else if (bloqueo) {
+    routeItem.style.backgroundColor = '#f17b5eff';
+    alertMessage.textContent = "⛔ Bloqueo de ruta";
+  }
+
+  // Cerrar modal
+  modal.style.display = "none";
+});
+
+
+
 function drawRouteOnMap(routeId) {
   const feature = window.routesData.features.find(f => f.properties.id === routeId);
   if (!feature) return;
 
-  const color = feature.properties.color || "blue";
+  const color = feature.properties.color || "blue"; // usa color asignado o azul por defecto
 
   const layer = L.geoJSON(feature, {
-    style: { color, weight: 4 }
+    style: (f) => {
+      if (f.geometry.type === "LineString") {
+        return { color, weight: 4 };
+      }
+    },zintToLayer: (f, latlng) => {
+      if (f.geometry.type === "Point") {
+        return L.marker(latlng).bindPopup(`<b>${f.properties.name || "Parada"}</b>`);
+      }
+    }
   }).addTo(map);
 
   fixedRoutesLayers[routeId] = layer;
 }
+
+
+// Objeto global para guardar las capas de cada ruta fijada
+let fixedRoutesLayers = {};
+
 
 // Función que dibuja las paradas usando los datos globales de stopsData.
 function drawStopsOnMap(routeId) {
