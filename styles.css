@@ -11,6 +11,11 @@ body {
   height: 100vh;
   overflow: hidden;
   background-color: #f0f2f5;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #f0f0f0;
 }
 
 .header {
@@ -449,9 +454,7 @@ body {
   background-color: #2980b9;
 }
 
-/* =============================================
-   ESTILOS PARA ICONOS Y MARCADORES
-   ============================================= */
+/* ESTILOS PARA ICONOS Y MARCADORES */
 
 /* Icono de parada básico */
 .stop-icon {
@@ -466,9 +469,7 @@ body {
   border-radius: 50%;
 }
 
-/* =============================================
-   ESTILOS PARA POPUPS
-   ============================================= */
+/* ESTILOS PARA POPUPS */
 
 /* Popup de ruta */
 .route-popup {
@@ -519,9 +520,7 @@ body {
   font-weight: bold;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE DESTINO
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE DESTINO */
 
 .destination-marker {
   position: relative;
@@ -637,9 +636,7 @@ body {
   margin-top: 10px;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE PARADA MÁS CERCANA
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE PARADA MÁS CERCANA */
 
 .nearest-stop-marker {
   position: relative;
@@ -710,9 +707,7 @@ body {
   margin: 10px 0 0 0;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE UBICACIÓN DE USUARIO
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE UBICACIÓN DE USUARIO */
 
 .user-location-marker {
   position: relative;
@@ -740,9 +735,7 @@ body {
   border-radius: 50%;
 }
 
-/* =============================================
-   ESTILOS PARA BOTONES
-   ============================================= */
+/* ESTILOS PARA BOTONES */
 
 /* Botón para establecer destino */
 .set-destination-btn {

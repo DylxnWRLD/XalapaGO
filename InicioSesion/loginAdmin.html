@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Login - XalapaGO</title>
   <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('rsc/equis.jpg');
+    }
+  </style>
 </head>
+
 <body>
   <div class="header">
     <h1><i class="fas fa-bus"></i> XalapaGO</h1>
@@ -40,7 +47,7 @@
     // Simulación (credenciales predefinidas)
     const credenciales = { usuario: "admin", password: "1234" };
 
-    document.getElementById("loginForm").addEventListener("submit", function(e) {
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
       e.preventDefault();
       const user = document.getElementById("usuario").value;
       const pass = document.getElementById("password").value;
@@ -54,4 +61,5 @@
     });
   </script>
 </body>
+
 </html>
