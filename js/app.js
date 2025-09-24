@@ -135,6 +135,10 @@ function setupEventListeners() {
     this.innerHTML = sidebar.classList.contains('hidden')
       ? '<i class="fas fa-bars"></i>'
       : '<i class="fas fa-times"></i>';
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
   });
 
   document.querySelectorAll('.tab').forEach(tab => {
@@ -529,7 +533,6 @@ function addRouteToList(properties) {
     <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
     <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
     <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${checked}></p>
-    <p>hola</p>
   `;
 
   // Si haces click en el título se selecciona ruta
