@@ -11,6 +11,11 @@ body {
   height: 100vh;
   overflow: hidden;
   background-color: #f0f2f5;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #f0f0f0;
 }
 
 .header {
@@ -79,31 +84,43 @@ body {
   border-right: 1px solid #ddd;
   padding: 1rem;
   overflow-y: auto;
-  transition: transform 0.3s ease;
+  /* Cambiamos la transición para que se aplique al ancho y al padding */
+  transition: width 0.3s ease, padding 0.3s ease; 
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  /*Evita que el contenido se desborde al colapsar */
+  overflow-x: hidden; 
 }
 
 .sidebar.hidden {
-  transform: translateX(-100%);
+  width: 0;
+  padding: 1rem 0; /* Mantenemos padding vertical, quitamos el horizontal */
 }
 
 .sidebar-toggle {
-  position: absolute;
-  top: 80px;
+    position: absolute;
+    top: 80px;
+    left: 360px;
+    z-index: 1000;
+    transition: left 0.3s ease; 
+
+    background-color: #007bff; /* Color de fondo del botón*/
+    color: white; /* Color del icono */
+    border: none;
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 0.5rem 0.8rem; /* Tamaño del padding */
+    font-size: 1.2rem; /* Tamaño del icono */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra para dar volumen */
+    display: flex; /* Para centrar el icono si hay padding */
+    align-items: center;
+    justify-content: center;
+}
+
+/*Posición del botón cuando la barra está CERRADA */
+.sidebar.hidden + #map + .sidebar-toggle {
   left: 10px;
-  z-index: 1000;
-  background: white;
-  border: none;
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .control-panel {
@@ -449,9 +466,7 @@ body {
   background-color: #2980b9;
 }
 
-/* =============================================
-   ESTILOS PARA ICONOS Y MARCADORES
-   ============================================= */
+/* ESTILOS PARA ICONOS Y MARCADORES */
 
 /* Icono de parada básico */
 .stop-icon {
@@ -466,9 +481,7 @@ body {
   border-radius: 50%;
 }
 
-/* =============================================
-   ESTILOS PARA POPUPS
-   ============================================= */
+/* ESTILOS PARA POPUPS */
 
 /* Popup de ruta */
 .route-popup {
@@ -519,9 +532,7 @@ body {
   font-weight: bold;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE DESTINO
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE DESTINO */
 
 .destination-marker {
   position: relative;
@@ -637,9 +648,7 @@ body {
   margin-top: 10px;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE PARADA MÁS CERCANA
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE PARADA MÁS CERCANA */
 
 .nearest-stop-marker {
   position: relative;
@@ -710,9 +719,7 @@ body {
   margin: 10px 0 0 0;
 }
 
-/* =============================================
-   ESTILOS PARA MARCADOR DE UBICACIÓN DE USUARIO
-   ============================================= */
+/* ESTILOS PARA MARCADOR DE UBICACIÓN DE USUARIO */
 
 .user-location-marker {
   position: relative;
@@ -740,9 +747,7 @@ body {
   border-radius: 50%;
 }
 
-/* =============================================
-   ESTILOS PARA BOTONES
-   ============================================= */
+/* ESTILOS PARA BOTONES */
 
 /* Botón para establecer destino */
 .set-destination-btn {
