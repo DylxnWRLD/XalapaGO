@@ -818,3 +818,28 @@ body {
 .auth-btn:hover {
   background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
 }
+
+/*Estilo del feedback cuando se fija una ruta*/
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+  opacity: 0;
+  animation: fadeInOut 2s ease forwards;
+  z-index: 10000;
+}
+
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
