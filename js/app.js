@@ -520,6 +520,14 @@ function showSearchResults(routeIds, title) {
   }
 }
 
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -540,26 +548,41 @@ function addRouteToList(properties) {
     <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${isFixed}></p>
     <p><strong>Agregar alerta</strong><input type="checkbox" class="alertas-ruta"></p>
     <p class="alert-message" style="font-weight:bold;"></p>
+    <span class="check-feedback" style="display:none; color:green; font-weight:bold; margin-left:10px;">✅ Fijada</span>
   `;
 
-  // Listener para "Fijar ruta"
+  // Al hacer clic en cualquier parte del routeItem (excepto en un input)
+  routeItem.addEventListener("click", (e) => {
+    if (e.target.tagName.toLowerCase() !== "input") {
+      selectRoute(properties.id);
+    }
+  });
+
+  // Checkbox "Fijar ruta"
   const checkboxFix = routeItem.querySelector(".fix-route");
+  const feedback = routeItem.querySelector(".check-feedback");
+
   checkboxFix.addEventListener("change", (e) => {
     if (e.target.checked) {
       if (!fixedRoutes.includes(properties.id)) {
         fixedRoutes.push(properties.id);
         drawRouteOnMap(properties.id);
         drawStopsOnMap(properties.id);
+        showToast("Ruta fijada ✅");
       }
+
     } else {
       fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
       removeRouteFromMap(properties.id);
       removeStopsFromMap(properties.id);
+
+      routeItem.style.backgroundColor = "";
     }
-    populateRoutesList(); // actualizar lista
+
+    populateRoutesList();
   });
 
-  // Listener para "Agregar alerta"
+  // Checkbox "Agregar alerta"
   const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
   checkboxAlerta.addEventListener("change", (e) => {
     const modal = document.getElementById("alertas");
@@ -577,6 +600,7 @@ function addRouteToList(properties) {
 
   routesContainer.appendChild(routeItem);
 }
+
 
 
 
