@@ -818,3 +818,59 @@ body {
 .auth-btn:hover {
   background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
 }
+
+/*Estilo para celulares*/
+@media (max-width: 576px) {
+  body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .header h1 {
+    font-size: 1.6rem;
+  }
+
+  .header p {
+    font-size: 0.85rem;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding: 1rem;
+  }
+
+  .sidebar-toggle {
+    left: 10px;
+    top: 10px;
+  }
+
+  .container {
+    flex-direction: column;
+  }
+
+  #map {
+    height: 60vh;
+  }
+
+  .stats-panel {
+    top: auto;
+    bottom: 20px;
+    right: 10px;
+    max-width: 90%;
+  }
+
+  .auth-area {
+    position: static;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .auth-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+/*Estilo Para Tablets*/
