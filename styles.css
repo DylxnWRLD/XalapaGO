@@ -874,3 +874,25 @@ body {
 }
 
 /*Estilo Para Tablets*/
+@media (min-width: 577px) and (max-width: 992px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .sidebar-toggle {
+    left: 290px;
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .auth-btn {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+
+  .stats-panel {
+    max-width: 180px;
+  }
+}
