@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateUI();
 });
 
-/** 
- * Variables globales que almacenan rutas disponibles,
+/** * Variables globales que almacenan rutas disponibles,
  * el círculo de proximidad de búsqueda, las paradas resaltadas
  * y la configuración inicial del mapa.
  */
@@ -40,8 +39,7 @@ const searchAliases = {
  * Carga los datos de rutas y paradas desde archivos GeoJSON.
  * Detecta las rutas disponibles, obtiene la información
  * de cada ruta y sus paradas, y finalmente asigna colores.
- * 
- * @async
+ * * @async
  * @function loadData
  */
 async function loadData() {
@@ -82,8 +80,7 @@ async function loadData() {
 /**
  * Detecta las rutas disponibles leyendo el archivo índice.
  * Actualiza la variable global `availableRoutes`.
- * 
- * @async
+ * * @async
  * @function detectAvailableRoutes
  */
 async function detectAvailableRoutes() {
@@ -102,8 +99,7 @@ async function detectAvailableRoutes() {
 /**
  * Asigna colores a las rutas cargadas de forma cíclica
  * desde una paleta de colores predefinida.
- * 
- * @function assignRouteColors
+ * * @function assignRouteColors
  */
 function assignRouteColors() {
   const colors = [
@@ -121,30 +117,25 @@ function assignRouteColors() {
  * Configura los event listeners de la aplicación,
  * incluyendo cambio de estilos del mapa, apertura/cierre
  * de la barra lateral y manejo de pestañas.
- * 
- * @function setupEventListeners
+ * * @function setupEventListeners
  */
 function setupEventListeners() {
   document.getElementById('style-default').addEventListener('click', () => changeMapStyle('Standard'));
   document.getElementById('style-satellite').addEventListener('click', () => changeMapStyle('Satélite'));
   document.getElementById('style-dark').addEventListener('click', () => changeMapStyle('Oscuro'));
 
-// --- REEMPLAZA CON ESTA NUEVA VERSIÓN ---
-document.getElementById('sidebar-toggle').addEventListener('click', function () {
-    // Ahora seleccionamos el contenedor principal
+  document.getElementById('sidebar-toggle').addEventListener('click', function () {
     const container = document.querySelector('.container');
-    // Y añadimos/quitamos la clase en él
     container.classList.toggle('sidebar-colapsada');
 
-    // La lógica del ícono ahora revisa la clase en el contenedor
     this.innerHTML = container.classList.contains('sidebar-colapsada')
       ? '<i class="fas fa-bars"></i>'
       : '<i class="fas fa-times"></i>';
-    
+
     setTimeout(() => {
-        map.invalidateSize();
+      map.invalidateSize();
     }, 300);
-});
+  });
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function () {
@@ -160,8 +151,7 @@ document.getElementById('sidebar-toggle').addEventListener('click', function () 
 /**
  * Actualiza la interfaz de usuario cargando rutas,
  * paradas y estadísticas.
- * 
- * @function updateUI
+ * * @function updateUI
  */
 function updateUI() {
   populateRoutesList();
@@ -174,14 +164,12 @@ function updateUI() {
  * Pobla la lista de rutas en el contenedor lateral,
  * incluyendo un elemento para mostrar todas las rutas
  * y los elementos individuales para cada ruta.
- * 
- * @function populateRoutesList
+ * * @function populateRoutesList
  */
 function populateRoutesList() {
   const routesContainer = document.getElementById('routes-container');
   routesContainer.innerHTML = '';
 
-  // Ítem para mostrar todas las rutas
   const allItem = document.createElement('div');
   allItem.className = 'route-item route-item--all';
   allItem.innerHTML = `
@@ -189,14 +177,12 @@ function populateRoutesList() {
     <p>Ver todas las rutas y paradas</p>
   `;
   allItem.addEventListener('click', () => {
-    // Cuando el usuario hace clic en "Todas las rutas", se limpia cualquier búsqueda previa
     document.getElementById('search-place').value = '';
     selectRoute('all');
     clearHighlightedStops();
   });
   routesContainer.appendChild(allItem);
 
-  // Separar las rutas fijadas de las no fijadas
   const fixedRouteFeatures = [];
   const unfixedRouteFeatures = [];
 
@@ -208,7 +194,6 @@ function populateRoutesList() {
     }
   });
 
-  // Primero, agregar las rutas fijadas
   if (fixedRouteFeatures.length > 0) {
     const fixedHeaderContainer = document.createElement('div');
     fixedHeaderContainer.className = 'fixed-header-container';
@@ -219,11 +204,10 @@ function populateRoutesList() {
       </button>
     `;
     routesContainer.appendChild(fixedHeaderContainer);
-    
-    // Añadir el evento al botón de desfijar
+
     document.getElementById('unpin-all-btn').addEventListener('click', () => {
-        clearFixedRoutes(); // Llama a la función para limpiar todas las rutas fijadas
-        populateRoutesList(); // Re-renderiza la lista para actualizar la vista
+      clearFixedRoutes();
+      populateRoutesList();
     });
 
     fixedRouteFeatures.forEach(feature => {
@@ -231,7 +215,6 @@ function populateRoutesList() {
     });
   }
 
-  // Luego, agregar el resto de las rutas
   const allHeader = document.createElement('h5');
   allHeader.textContent = 'Todas las Rutas';
   routesContainer.appendChild(allHeader);
@@ -241,51 +224,14 @@ function populateRoutesList() {
 }
 
 /**
- * Agrega una ruta específica a la lista lateral
- * con información como imagen, descripción, notas
- * y cantidad de unidades por turno.
- * 
- * @param {Object} properties - Propiedades de la ruta (id, name, desc, notes, etc.)
- * @function addRouteToList
- */
-function addRouteToList(properties) {
-  const routesContainer = document.getElementById('routes-container');
-  const routeItem = document.createElement('div');
-  routeItem.className = 'route-item';
-  routeItem.dataset.id = properties.id;
-
-  routeItem.innerHTML = `
-    <h4><i class="fas fa-route"></i> ${properties.name}</h4>
-    <p>
-      <strong>Imagen:</strong><br>
-      ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
-    </p>
-    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
-    <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
-  `;
-
-
-  routeItem.addEventListener('click', () => selectRoute(properties.id));
-  routesContainer.appendChild(routeItem);
-}
-
-/**
  * Actualiza las estadísticas globales de la aplicación,
  * mostrando número total de rutas y paradas.
- * 
- * @function updateStats
+ * * @function updateStats
  */
 function updateStats() {
   const totalRoutes = window.routesData.features.length;
   const totalStops = window.stopsData.features.length;
 
-  /**
-   * Función auxiliar que actualiza un elemento del DOM.
-   * 
-   * @param {string} id - ID del elemento a actualizar
-   * @param {number} value - Valor a asignar
-   */
   const updateElement = (id, value) => {
     const element = document.getElementById(id);
     if (element) element.textContent = value;
@@ -319,8 +265,7 @@ if (usuario && authArea) {
 /**
  * Cierra la sesión del usuario eliminando
  * su información de `localStorage` y recargando la página.
- * 
- * @function cerrarSesion
+ * * @function cerrarSesion
  */
 function cerrarSesion() {
   localStorage.removeItem("usuario");
@@ -332,10 +277,8 @@ function setupSearchFunctionality() {
   const searchInput = document.getElementById('search-place');
   const searchButton = document.getElementById('search-button');
 
-  // Evento para el botón de búsqueda
   searchButton.addEventListener('click', performSearch);
 
-  // Evento para la tecla Enter en el input
   searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       performSearch();
@@ -352,26 +295,19 @@ async function performSearch() {
     return;
   }
 
-  // Limpiar el mapa antes de cada nueva búsqueda
-  selectRoute('none'); // Desactiva cualquier selección previa
-  clearHighlightedStops(); // Limpia los puntos resaltados
+  selectRoute('none');
+  clearHighlightedStops();
 
-  // Limpiar la lista de rutas para evitar superposición
   const routesContainer = document.getElementById('routes-container');
   routesContainer.innerHTML = '';
 
   try {
-    // Primero intentamos geocodificar el término de búsqueda
     const location = await geocodeSearchTerm(searchTerm);
 
     if (location) {
-      // Centrar el mapa en la ubicación encontrada
       map.setView([location.lat, location.lng], 16);
-
-      // Buscar rutas cercanas a esta ubicación
       findRoutesNearLocation(location);
     } else {
-      // Si no se encuentra la ubicación, buscar en nombres de rutas y descripciones
       searchInRouteData(searchTerm);
     }
   } catch (error) {
@@ -383,7 +319,7 @@ async function performSearch() {
 // Normaliza y reemplaza el término de búsqueda si es un alias
 function normalizeSearchTerm(term) {
   const normalized = term.trim().toLowerCase();
-  return searchAliases[normalized] || term; // usa alias si existe
+  return searchAliases[normalized] || term;
 }
 
 // Geocodificar el término de búsqueda usando Nominatim (OpenStreetMap)
@@ -412,10 +348,8 @@ function findRoutesNearLocation(location) {
   const searchTerm = document.getElementById('search-place').value.trim();
   const proximityThreshold = 500; // metros
 
-  // Resaltar paradas en el rango
   highlightStopsInRange(location, proximityThreshold);
 
-  // Encontrar paradas cercanas
   const nearbyStops = allStopLayers.filter(stop => {
     const distance = calculateDistance(
       location.lat, location.lng,
@@ -424,14 +358,11 @@ function findRoutesNearLocation(location) {
     return distance <= proximityThreshold;
   });
 
-  // Obtener IDs de rutas únicas de las paradas cercanas
   const nearbyRouteIds = [...new Set(nearbyStops.map(stop => stop.routeId))];
 
   if (nearbyRouteIds.length > 0) {
-    // Mostrar las rutas cercanas
     showSearchResults(nearbyRouteIds, `Rutas cerca de: ${location.displayName || 'tu búsqueda'}`);
   } else {
-    // Si no hay rutas cercanas, buscar en los datos de las rutas
     searchInRouteData(searchTerm);
     alert('No se encontraron rutas cercanas a este lugar. Mostrando resultados relacionados.');
   }
@@ -442,7 +373,6 @@ function searchInRouteData(searchTerm) {
   const term = searchTerm.toLowerCase();
   const matchingRoutes = [];
 
-  // Buscar en nombres y descripciones de rutas
   window.routesData.features.forEach(feature => {
     const props = feature.properties;
     const nameMatch = props.name && props.name.toLowerCase().includes(term);
@@ -457,15 +387,15 @@ function searchInRouteData(searchTerm) {
     showSearchResults(matchingRoutes, `Rutas relacionadas con: ${searchTerm}`);
   } else {
     alert('No se encontraron rutas relacionadas con tu búsqueda.');
-    // Mostrar todas las rutas si no hay resultados
     selectRoute('all');
   }
 }
 
-// Array global para rutas fijadas
+// Array global para rutas y paradas fijadas
 let fixedRoutes = [];
-//Lista para paradas
 let fixedStopsLayers = {};
+let fixedRoutesLayers = {};
+
 
 // Mostrar resultados de búsqueda
 function showSearchResults(routeIds, title) {
@@ -489,7 +419,6 @@ function showSearchResults(routeIds, title) {
     clearHighlightedStops();
   });
 
-// Separar las rutas fijadas que coinciden con la búsqueda de las no fijadas
   const fixedMatches = [];
   const unfixedMatches = [];
 
@@ -503,7 +432,6 @@ function showSearchResults(routeIds, title) {
     }
   });
 
-  // Mostrar primero las rutas fijadas que coinciden con la búsqueda
   if (fixedMatches.length > 0) {
     const fixedHeader = document.createElement('h5');
     fixedHeader.textContent = 'Fijadas y Relacionadas';
@@ -511,7 +439,6 @@ function showSearchResults(routeIds, title) {
     fixedMatches.forEach(feature => addRouteToList(feature.properties));
   }
 
-  // Luego mostrar las rutas no fijadas que coinciden
   if (unfixedMatches.length > 0) {
     const unfixedHeader = document.createElement('h5');
     unfixedHeader.textContent = 'Resultados de la búsqueda';
@@ -528,6 +455,10 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 2000);
 }
 
+
+// ==================================================================
+// --- FUNCIÓN MODIFICADA PARA INTEGRAR LAS MEJORAS DE ALERTA ---
+// ==================================================================
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -536,6 +467,7 @@ function addRouteToList(properties) {
 
   const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
+  // Se mantiene tu estructura HTML original
   routeItem.innerHTML = `
     <h4><i class="fas fa-route"></i> ${properties.name}</h4>
     <p>
@@ -551,17 +483,13 @@ function addRouteToList(properties) {
     <span class="check-feedback" style="display:none; color:green; font-weight:bold; margin-left:10px;">✅ Fijada</span>
   `;
 
-  // Al hacer clic en cualquier parte del routeItem (excepto en un input)
   routeItem.addEventListener("click", (e) => {
     if (e.target.tagName.toLowerCase() !== "input") {
       selectRoute(properties.id);
     }
   });
 
-  // Checkbox "Fijar ruta"
   const checkboxFix = routeItem.querySelector(".fix-route");
-  const feedback = routeItem.querySelector(".check-feedback");
-
   checkboxFix.addEventListener("change", (e) => {
     if (e.target.checked) {
       if (!fixedRoutes.includes(properties.id)) {
@@ -570,31 +498,39 @@ function addRouteToList(properties) {
         drawStopsOnMap(properties.id);
         showToast("Ruta fijada ✅");
       }
-
     } else {
       fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
       removeRouteFromMap(properties.id);
       removeStopsFromMap(properties.id);
-
-      routeItem.style.backgroundColor = "";
+      routeItem.style.backgroundColor = ""; // Limpiar si se desfija
     }
-
     populateRoutesList();
   });
 
-  // Checkbox "Agregar alerta"
+  // --- LÓGICA MODIFICADA ---
+  // Ahora el checkbox original abre la nueva ventana modal mejorada.
   const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
   checkboxAlerta.addEventListener("change", (e) => {
-    const modal = document.getElementById("alertas");
+    const modal = document.getElementById("alertas-modal"); // Apuntamos al nuevo modal
+
     if (e.target.checked) {
       modal.style.display = "flex";
+      // Añadimos una pequeña animación de entrada
+      setTimeout(() => {
+        modal.style.opacity = 1;
+        modal.querySelector('.modal-content').style.transform = 'scale(1)';
+      }, 10);
+
       modal.dataset.routeId = properties.id;
-      modal.dataset.routeItemId = routeItem.dataset.id;
-      modal.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      // Deseleccionamos cualquier opción previa en el modal
+      modal.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+
     } else {
-      modal.style.display = "none";
-      routeItem.style.backgroundColor = "";
-      routeItem.querySelector(".alert-message").textContent = "";
+      // Si el usuario desmarca el checkbox, se elimina la alerta
+      const alertMessage = routeItem.querySelector(".alert-message");
+      routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
+      alertMessage.textContent = "";
+      closeModal(); // Se cierra el modal si estuviera abierto
     }
   });
 
@@ -602,54 +538,96 @@ function addRouteToList(properties) {
 }
 
 
+// ==================================================================
+// --- NUEVO BLOQUE DE CÓDIGO PARA MANEJAR LA VENTANA MODAL ---
+// ==================================================================
 
+// Función para cerrar el modal con animación
+function closeModal() {
+  const modal = document.getElementById("alertas-modal");
+  modal.style.opacity = 0;
+  modal.querySelector('.modal-content').style.transform = 'scale(0.9)';
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300); // Esperamos que la animación termine
+}
 
-
-
+// Listener para el botón de GUARDAR del nuevo modal
 document.getElementById("guardar-alerta").addEventListener("click", () => {
-  const modal = document.getElementById("alertas");
+  const modal = document.getElementById("alertas-modal");
   const routeId = modal.dataset.routeId;
+  if (!routeId) return;
+
   const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
   const alertMessage = routeItem.querySelector(".alert-message");
 
-  // Detectar qué alerta está seleccionada
-  const trafico = document.getElementById("a-trafico").checked;
-  const construccion = document.getElementById("a-construccion").checked;
-  const bloqueo = document.getElementById("a-bloqueo").checked;
-
-  // Reset color
-  routeItem.style.backgroundColor = "";
+  // Limpiamos clases y mensajes de alerta previos
+  routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
   alertMessage.textContent = "";
 
-  if (trafico) {
-    routeItem.style.backgroundColor = '#f4f472ff';
-    alertMessage.textContent = "🚦 Tráfico";
-  } else if (construccion) {
-    routeItem.style.backgroundColor =' #f3c171ff';
-    alertMessage.textContent = "🚧 En construcción";
-  } else if (bloqueo) {
-    routeItem.style.backgroundColor = '#f17b5eff';
-    alertMessage.textContent = "⛔ Bloqueo de ruta";
+  // Buscamos qué opción (radio button) fue seleccionada
+  const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
+
+  if (selectedAlert) {
+    const alertType = selectedAlert.value;
+    if (alertType === 'trafico') {
+      routeItem.classList.add('alert-trafico');
+      alertMessage.textContent = "Reporte: Tráfico Intenso 🚦";
+    } else if (alertType === 'construccion') {
+      routeItem.classList.add('alert-construccion');
+      alertMessage.textContent = "Reporte: Obra en la Vía 🚧";
+    } else if (alertType === 'bloqueo') {
+      routeItem.classList.add('alert-bloqueo');
+      alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
+    }
+  } else {
+    // Si no se seleccionó nada, desmarcamos el checkbox de alerta en la ruta
+    const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
+    if (checkboxAlerta) checkboxAlerta.checked = false;
   }
 
-  // Cerrar modal
-  modal.style.display = "none";
+  closeModal();
 });
 
+// Listener para el botón CANCELAR
+document.getElementById("cancelar-alerta").addEventListener("click", () => {
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (routeId) {
+    // Si se cancela, nos aseguramos de que el checkbox de la ruta se desmarque
+    const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
+    const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
+    if (checkboxAlerta) checkboxAlerta.checked = false;
+  }
+  closeModal();
+});
 
+// Listener para cerrar el modal si se hace clic fuera de él
+document.getElementById("alertas-modal").addEventListener("click", (e) => {
+  if (e.target.id === 'alertas-modal') {
+    const routeId = e.currentTarget.dataset.routeId;
+    if (routeId) {
+      const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
+      const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
+      if (checkboxAlerta) checkboxAlerta.checked = false;
+    }
+    closeModal();
+  }
+});
 
 function drawRouteOnMap(routeId) {
   const feature = window.routesData.features.find(f => f.properties.id === routeId);
   if (!feature) return;
 
-  const color = feature.properties.color || "blue"; // usa color asignado o azul por defecto
+  const color = feature.properties.color || "blue";
 
   const layer = L.geoJSON(feature, {
     style: (f) => {
       if (f.geometry.type === "LineString") {
         return { color, weight: 4 };
       }
-    },zintToLayer: (f, latlng) => {
+    },
+    pointToLayer: (f, latlng) => { // Corregido 'zintToLayer' por 'pointToLayer'
       if (f.geometry.type === "Point") {
         return L.marker(latlng).bindPopup(`<b>${f.properties.name || "Parada"}</b>`);
       }
@@ -659,21 +637,13 @@ function drawRouteOnMap(routeId) {
   fixedRoutesLayers[routeId] = layer;
 }
 
-
-// Objeto global para guardar las capas de cada ruta fijada
-let fixedRoutesLayers = {};
-
-
-// Función que dibuja las paradas usando los datos globales de stopsData.
 function drawStopsOnMap(routeId) {
-  // Primero, encuentra las paradas que corresponden a esta ruta.
   const stopsForRoute = window.stopsData.features.filter(
     f => f.properties.routeId === routeId
   );
 
   if (stopsForRoute.length === 0) return;
 
-  // Obtener el color de la ruta para los íconos de parada.
   const route = window.routesData.features.find(r => r.properties.id === routeId);
   const color = route ? route.properties.color : '#f39c12';
 
@@ -688,11 +658,9 @@ function drawStopsOnMap(routeId) {
     }
   }).addTo(map);
 
-  // Guardar la capa para poder eliminarla más tarde.
   fixedStopsLayers[routeId] = stopsLayer;
 }
 
-// Quitar la ruta (línea y paradas) del mapa
 function removeRouteFromMap(routeId) {
   const layer = fixedRoutesLayers[routeId];
   if (!layer) return;
@@ -709,45 +677,32 @@ function removeStopsFromMap(routeId) {
   delete fixedStopsLayers[routeId];
 }
 
-/**
- * Limpia todas las rutas y paradas que han sido fijadas en el mapa.
- * Restaura el estado de la aplicación.
- */
 function clearFixedRoutes() {
-  // 1. Eliminar todas las capas de rutas fijadas del mapa
   for (const routeId in fixedRoutesLayers) {
     if (fixedRoutesLayers.hasOwnProperty(routeId)) {
       map.removeLayer(fixedRoutesLayers[routeId]);
     }
   }
-  fixedRoutesLayers = {}; // Vacía el objeto de capas
+  fixedRoutesLayers = {};
 
-  // 2. Eliminar todas las capas de paradas fijadas del mapa
   for (const routeId in fixedStopsLayers) {
     if (fixedStopsLayers.hasOwnProperty(routeId)) {
       map.removeLayer(fixedStopsLayers[routeId]);
     }
   }
-  fixedStopsLayers = {}; // Vacía el objeto de capas
+  fixedStopsLayers = {};
 
-  // 3. Vaciar el arreglo de IDs de rutas fijadas
   fixedRoutes = [];
 
-  // 4. Asegurarse de que los checkboxes en la lista se desmarquen
   document.querySelectorAll('.fix-route').forEach(checkbox => {
     checkbox.checked = false;
   });
 }
 
-//Resalta las paradas dentro de un radio específico de una ubicación
 function highlightStopsInRange(location, radius = 500) {
-  // Limpiar resaltados anteriores
   clearHighlightedStops();
-
-  // Crear o actualizar el círculo de proximidad de búsqueda
   updateSearchProximityCircle(location, radius);
 
-  // Encontrar y resaltar paradas dentro del rango
   const stopsInRange = allStopLayers.filter(stop => {
     const distance = calculateDistance(
       location.lat, location.lng,
@@ -756,33 +711,24 @@ function highlightStopsInRange(location, radius = 500) {
     return distance <= radius;
   });
 
-  // Resaltar las paradas encontradas
   stopsInRange.forEach(stop => {
-    // Cambiar el icono a uno resaltado
     const highlightIcon = createHighlightedStopIcon('#e74c3c');
     stop.marker.setIcon(highlightIcon);
-
-    // Añadir a la lista de paradas resaltadas
     highlightedStops.push(stop);
-
-    // Abrir popup para la parada más cercana
-    if (stopsInRange.length > 0) {
-      const closestStop = stopsInRange.reduce((prev, curr) => {
-        const prevDist = calculateDistance(location.lat, location.lng, prev.coordinates[0], prev.coordinates[1]);
-        const currDist = calculateDistance(location.lat, location.lng, curr.coordinates[0], curr.coordinates[1]);
-        return prevDist < currDist ? prev : curr;
-      });
-
-      closestStop.marker.openPopup();
-    }
   });
 
-  // También resaltar en la lista del panel lateral
+  if (stopsInRange.length > 0) {
+    const closestStop = stopsInRange.reduce((prev, curr) => {
+      const prevDist = calculateDistance(location.lat, location.lng, prev.coordinates[0], prev.coordinates[1]);
+      const currDist = calculateDistance(location.lat, location.lng, curr.coordinates[0], curr.coordinates[1]);
+      return prevDist < currDist ? prev : curr;
+    });
+    closestStop.marker.openPopup();
+  }
+
   highlightStopsInList(stopsInRange.map(stop => stop.id));
 }
 
-
-//Crea un icono resaltado para paradas
 function createHighlightedStopIcon(color) {
   return L.divIcon({
     className: 'highlighted-stop-icon',
@@ -816,15 +762,11 @@ function createHighlightedStopIcon(color) {
   });
 }
 
-
-//Actualiza el círculo de proximidad de búsqueda
 function updateSearchProximityCircle(location, radius) {
-  // Eliminar círculo anterior si existe
   if (searchProximityCircle) {
     map.removeLayer(searchProximityCircle);
   }
 
-  // Crear nuevo círculo de búsqueda
   searchProximityCircle = L.circle([location.lat, location.lng], {
     color: '#e74c3c',
     fillColor: '#e74c3c',
@@ -833,23 +775,18 @@ function updateSearchProximityCircle(location, radius) {
     radius: radius
   }).addTo(map);
 
-  // Añadir tooltip al círculo
   searchProximityCircle.bindTooltip(
     `Radio de búsqueda: ${radius}m`,
     { permanent: false, direction: 'center' }
   );
 }
 
-
-//Resalta las paradas en la lista del panel lateral
 function highlightStopsInList(stopIds) {
-  // Primero, quitar cualquier resaltado anterior
   document.querySelectorAll('.stop-item').forEach(item => {
     item.style.backgroundColor = 'white';
     item.style.borderLeft = 'none';
   });
 
-  // Resaltar las paradas que están en el rango
   stopIds.forEach(id => {
     const stopItem = document.querySelector(`.stop-item[data-id="${id}"]`);
     if (stopItem) {
@@ -859,25 +796,20 @@ function highlightStopsInList(stopIds) {
   });
 }
 
-//Limpia todos los resaltados de paradas
 function clearHighlightedStops() {
-  // Restaurar iconos originales de las paradas resaltadas
   highlightedStops.forEach(stop => {
     const route = window.routesData.features.find(r => r.properties.id === stop.routeId);
     const color = route ? route.properties.color : '#f39c12';
     stop.marker.setIcon(createStopIcon(color));
   });
 
-  // Limpiar la lista
   highlightedStops = [];
 
-  // Eliminar el círculo de proximidad de búsqueda
   if (searchProximityCircle) {
     map.removeLayer(searchProximityCircle);
     searchProximityCircle = null;
   }
 
-  // Quitar resaltados de la lista
   document.querySelectorAll('.stop-item').forEach(item => {
     item.style.backgroundColor = 'white';
     item.style.borderLeft = 'none';

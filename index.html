@@ -95,16 +95,31 @@
     </div>
 
 
-    <div id="alertas" style="display: none; width: 400px; height: 250px; background-color: rgba(76, 76, 179, 0.852); border-radius: 10px; justify-content: center; align-items: center; flex-direction:column; ">
-      <h1>Agregar alerta</h1>
-      <label for="a-trafico">Tráfico</label><br>
-      <p><input type="checkbox" id="a-trafico"></p>
-      <label for="a-trafico">Ruta en construccion</label><br>
-      <p><input type="checkbox" id="a-construccion"></p>
-      <label for="a-trafico">Bloqueo de ruta</label><br>
-      <p><input type="checkbox" id="a-bloqueo"></p>
-      
-      <p><input type="button" id="guardar-alerta" style="width:150px; height:50px; background-color: cornflowerblue; border: none; border-radius: 8px; cursor: pointer;"></p>
+    <div id="alertas-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <h2 class="modal-title">Reportar Alerta en Ruta</h2>
+        <p class="modal-description">Selecciona el tipo de incidente para esta ruta.</p>
+
+        <div class="alert-options">
+          <div class="alert-option">
+            <input type="radio" id="a-trafico" name="alerta_tipo" value="trafico">
+            <label for="a-trafico"><span class="icon">🚦</span> Tráfico Intenso</label>
+          </div>
+          <div class="alert-option">
+            <input type="radio" id="a-construccion" name="alerta_tipo" value="construccion">
+            <label for="a-construccion"><span class="icon">🚧</span> Obra en la Vía</label>
+          </div>
+          <div class="alert-option">
+            <input type="radio" id="a-bloqueo" name="alerta_tipo" value="bloqueo">
+            <label for="a-bloqueo"><span class="icon">⛔</span> Ruta Bloqueada</label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="guardar-alerta" class="action-btn save-btn">Guardar Alerta</button>
+          <button id="cancelar-alerta" class="action-btn cancel-btn">Cancelar</button>
+        </div>
+      </div>
     </div>
 
     <div id="map"></div>
@@ -127,4 +142,5 @@
 
   <script src="js/auth.js"></script>
 </body>
+
 </html>

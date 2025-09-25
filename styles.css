@@ -38,7 +38,8 @@ body {
   text-align: right;
 }
 
-.auth-area a, .auth-area button {
+.auth-area a,
+.auth-area button {
   color: white;
   background: none;
   border: none;
@@ -89,10 +90,10 @@ body {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  
+
   /* --- LÍNEA AÑADIDA --- */
   /* Añade un espacio de 24px (1.5rem) en todos los lados */
-  padding: 1.5rem; 
+  padding: 1.5rem;
 }
 
 /* Ahora reaccionamos a la clase en el PADRE (.container) */
@@ -116,12 +117,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   /* Posición y animación */
   position: absolute;
   top: 68px;
   z-index: 1000;
-  
+
   /* Posición cuando la barra está ABIERTA */
   left: 360px;
   transition: left 0.3s ease;
@@ -603,10 +604,12 @@ body {
     opacity: 0;
     transform: translateY(-20px) scale(0.8);
   }
+
   50% {
     opacity: 1;
     transform: translateY(-5px) scale(1.1);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -614,9 +617,17 @@ body {
 }
 
 @keyframes pulse {
-  0% { transform: rotate(-45deg) scale(1); }
-  50% { transform: rotate(-45deg) scale(1.1); }
-  100% { transform: rotate(-45deg) scale(1); }
+  0% {
+    transform: rotate(-45deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(-45deg) scale(1.1);
+  }
+
+  100% {
+    transform: rotate(-45deg) scale(1);
+  }
 }
 
 /* Popup de destino */
@@ -706,9 +717,22 @@ body {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-5px); }
-  60% { transform: translateY(-3px); }
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-5px);
+  }
+
+  60% {
+    transform: translateY(-3px);
+  }
 }
 
 /* Popup de parada más cercana */
@@ -792,19 +816,23 @@ body {
 .clear-destination-btn:hover {
   background: #7f8c8d;
 }
+
 /*Estilo de botones de inicio, registro y regreso*/
 /* Área de autenticación */
 .auth-area {
-  position: absolute;    /* Para colocarlos en la esquina superior derecha */
+  position: absolute;
+  /* Para colocarlos en la esquina superior derecha */
   top: 20px;
   right: 20px;
   display: flex;
-  gap: 15px;             /* Espacio entre botones */
+  gap: 15px;
+  /* Espacio entre botones */
 }
 
 /* Estilo general de los botones de login/registro */
 .auth-btn {
-  background-color: #107cef; /* Azul estilo "bootstrap" */
+  background-color: #107cef;
+  /* Azul estilo "bootstrap" */
   color: white;
   padding: 10px 18px;
   text-decoration: none;
@@ -816,7 +844,8 @@ body {
 }
 
 .auth-btn:hover {
-  background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+  background-color: #0056b3;
+  /* Azul más oscuro al pasar el mouse */
 }
 
 /*Estilo para celulares*/
@@ -895,4 +924,126 @@ body {
   .stats-panel {
     max-width: 180px;
   }
+}
+
+/* --- Estilos para la Ventana Modal de Alertas --- */
+/* Pega esto al final de tu archivo styles.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.modal-title {
+  margin-top: 0;
+  color: #333;
+}
+
+.modal-description {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.alert-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.alert-option input[type="radio"] {
+  display: none;
+}
+
+.alert-option label {
+  display: block;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-weight: 500;
+}
+
+.alert-option label .icon {
+  margin-right: 10px;
+}
+
+.alert-option input[type="radio"]:checked+label {
+  background-color: #e9f5ff;
+  border-color: #007bff;
+  color: #004085;
+  font-weight: bold;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.action-btn {
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #0056b3;
+}
+
+.cancel-btn {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #e1e1e1;
+}
+
+/* Clases para resaltar las rutas (en lugar de cambiar el color directamente) */
+.route-item.alert-trafico {
+  background-color: #fffbe6 !important;
+  border-left: 5px solid #ffc107;
+}
+
+.route-item.alert-construccion {
+  background-color: #fff3e0 !important;
+  border-left: 5px solid #fd7e14;
+}
+
+.route-item.alert-bloqueo {
+  background-color: #fbeae5 !important;
+  border-left: 5px solid #dc3545;
 }
