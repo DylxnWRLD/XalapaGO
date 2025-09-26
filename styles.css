@@ -1048,9 +1048,60 @@ body {
   border-left: 5px solid #dc3545;
 }
 
+<<<<<<< HEAD
 .kv { display:flex; align-items:center; gap:.5rem; margin:.35rem 0; }
 .kv-label { font-weight:600; color:#2a2a2a; }
 .badge { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-weight:700; font-size:.85rem; line-height:1; border:1px solid rgba(0,0,0,.08); }
 .badge.ok { background:#e8f7ef; color:#146c2e; }
 .badge.no { background:#fde8ea; color:#8a1c23; }
 .route-img { width:100%; height:auto; border-radius:8px; margin:.25rem 0 .5rem; }
+=======
+/* --- Estilos para la Barra de Acciones Híbrida --- */
+.route-item-actions-hybrid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.alert-btn-hybrid {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #343a40;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.alert-btn-hybrid:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.alert-btn-hybrid .fas {
+  margin-right: 6px;
+}
+
+/* --- Estilos para el botón de Quitar Alerta --- */
+/* Pega esto al final de tu archivo styles.css */
+
+.remove-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.remove-btn:hover {
+  background-color: #c82333;
+}
+>>>>>>> 1a36b7074488e74ac8ff08c0fa157a1d4d03161f
