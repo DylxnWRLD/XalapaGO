@@ -411,47 +411,6 @@ function showToast(message) {
 // ==================================================================
 // --- MANEJO CENTRALIZADO DE ALERTAS ---
 // ==================================================================
-<<<<<<< HEAD
-
-
-  // --- LÓGICA MODIFICADA ---
-  // Ahora el checkbox original abre la nueva ventana modal mejorada.
-  const checkboxAlerta = routeItem.querySelector(".alertas-ruta");
-  checkboxAlerta.addEventListener("change", (e) => {
-    const modal = document.getElementById("alertas-modal"); // Apuntamos al nuevo modal
-
-    if (e.target.checked) {
-      modal.style.display = "flex";
-      // Añadimos una pequeña animación de entrada
-      setTimeout(() => {
-        modal.style.opacity = 1;
-        modal.querySelector('.modal-content').style.transform = 'scale(1)';
-      }, 10);
-
-      modal.dataset.routeId = properties.id;
-      // Deseleccionamos cualquier opción previa en el modal
-      modal.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
-
-    } else {
-      // Si el usuario desmarca el checkbox, se elimina la alerta
-      const alertMessage = routeItem.querySelector(".alert-message");
-      routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
-      alertMessage.textContent = "";
-      closeModal(); // Se cierra el modal si estuviera abierto
-    }
-  });
-
-  routesContainer.appendChild(routeItem);
-
-
-
-// ==================================================================
-// --- NUEVO BLOQUE DE CÓDIGO PARA MANEJAR LA VENTANA MODAL ---
-// ==================================================================
-
-// Función para cerrar el modal con animación
-=======
->>>>>>> 1a36b7074488e74ac8ff08c0fa157a1d4d03161f
 function closeModal() {
   const modal = document.getElementById("alertas-modal");
   modal.style.opacity = 0;
