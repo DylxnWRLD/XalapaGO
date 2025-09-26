@@ -1047,3 +1047,40 @@ body {
   background-color: #fbeae5 !important;
   border-left: 5px solid #dc3545;
 }
+
+/* --- Estilos para la Barra de Acciones Híbrida --- */
+.route-item-actions-hybrid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.alert-btn-hybrid {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #343a40;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.alert-btn-hybrid:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.alert-btn-hybrid .fas {
+  margin-right: 6px;
+}
