@@ -22,7 +22,7 @@ mongoose.connect(mongoURI)
 // --- Definir modelo Usuario ---
 const usuarioSchema = new mongoose.Schema({
   usuario: { type: String, required: true, unique: true },
-  correo: { type: String, required: true },
+  correo: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   admin: { type: Boolean, default: false }
 });
