@@ -1096,3 +1096,16 @@ body {
 .remove-btn:hover {
   background-color: #c82333;
 }
+
+/* Estilos del apartado "Mujer segura"
+*/
+
+.kv { display:flex; align-items:center; gap:.5rem; margin:.35rem 0; }
+.kv-label { font-weight:600; color:#2a2a2a; }
+.badge {
+  display:inline-block; padding:.2rem .6rem; border-radius:999px;
+  font-weight:700; font-size:.85rem; line-height:1;
+  border:1px solid rgba(0,0,0,.08);
+}
+.badge.ok { background:#e8f7ef; color:#146c2e; }  /* Sí */
+.badge.no { background:#fde8ea; color:#8a1c23; }  /* No */

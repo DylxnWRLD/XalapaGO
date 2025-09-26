@@ -7,6 +7,7 @@
                 "id": "13936318",
                 "name": "10004",
                 "desc": "Ruta 1 y 2: CAMPO DE TIRO - HDEZ.CASTILLO - SAYAGO",
+                "mujer_segura": true,
                 "image": "bus10004.jpg",
                 "notes": "Parti desde la parada de MAX hasta mi trabajo",
                 "peak_am": 10,

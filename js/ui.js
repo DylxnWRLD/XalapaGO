@@ -79,27 +79,42 @@ const imgHtml = `
   </p>
 `;
 
+// Soporta booleano y texto "si/sí"
+const v = properties.mujer_segura;
+const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
 
-  // Mujer segura…
-  const v = properties.mujer_segura;
-  const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
 
-  routeItem.innerHTML = `
-    <h4><i class="fas fa-route"></i> ${properties.name}</h4>
-    ${imgHtml}
-    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
-    <div class="kv">
-      <span class="kv-label">¿Versión “Mujer segura”?</span>
-      <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
-    </div>
-    <p><strong>Unidades:</strong>
-      AM:${properties.peak_am ?? '—'}
-      MD:${properties.midday ?? '—'}
-      PM:${properties.peak_pm ?? '—'}
-      NT:${properties.night ?? '—'}
-    </p>
-  `;
+const mujerSeguraHtml = `
+  <div class="kv mujer-segura-row">
+    <span class="kv-label">¿Versión “Mujer segura”?</span>
+    <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
+  </div>
+`;
+
+
+
+routeItem.innerHTML = `
+  <h4><i class="fas fa-route"></i> ${properties.name}</h4>
+
+  ${imgHtml}
+
+  <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
+
+
+
+  ${mujerSeguraHtml}   <!-- ← agregado aquí, debajo de Descripción -->
+
+  
+  <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
+
+  <p><strong>Unidades:</strong>
+    AM:${properties.peak_am ?? '—'}
+    MD:${properties.midday ?? '—'}
+    PM:${properties.peak_pm ?? '—'}
+    NT:${properties.night ?? '—'}
+  </p>
+`;
+
 
   routeItem.addEventListener('click', function () { selectRoute(properties.id); });
   routesContainer.appendChild(routeItem);

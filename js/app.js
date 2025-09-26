@@ -170,6 +170,17 @@ function addRouteToList(properties) {
     // Verificamos si hay una alerta guardada para esta ruta.
     const currentAlert = routeAlerts[properties.id];
     const buttonText = currentAlert ? 'Modificar Alerta' : 'Agregar Alerta';
+    
+    //Construcción de mujer segura de acuerdo al booleano en la ruta:
+    const v = properties.mujer_segura;
+    const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
+
+    const mujerSeguraHtml = `
+      <div class="kv mujer-segura-row">
+        <span class="kv-label">¿Versión “Mujer segura”?</span>
+        <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
+      </div>
+    `;
 
     routeItem.innerHTML = `
         <h4><i class="fas fa-route"></i> ${properties.name}</h4>
@@ -177,7 +188,11 @@ function addRouteToList(properties) {
             <strong>Imagen:</strong><br>
             ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
         </p>
+        
         <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
+        
+        ${mujerSeguraHtml} 
+
         <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
         <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
         
