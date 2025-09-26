@@ -157,14 +157,10 @@ function populateRoutesList() {
   unfixedRouteFeatures.forEach(feature => addRouteToList(feature.properties));
 }
 
+
 // ==================================================================
-// --- VERSIÓN HÍBRIDA DE LA FUNCIÓN `addRouteToList` ---
+// --- VERSIÓN HÍBRIDA Y FINAL DE `addRouteToList` ---
 // ==================================================================
-/**
- * Agrega una ruta a la lista, combinando la vista detallada original
- * con botones de acción más modernos.
- * @param {Object} properties - Propiedades de la ruta.
- */
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -172,7 +168,6 @@ function addRouteToList(properties) {
   routeItem.dataset.id = properties.id;
   const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
-  // **ESTRUCTURA HÍBRIDA:** Mantenemos tus detalles y agregamos una barra de acciones.
   routeItem.innerHTML = `
     <h4><i class="fas fa-route"></i> ${properties.name}</h4>
     <p>
@@ -194,14 +189,12 @@ function addRouteToList(properties) {
     <p class="alert-message" style="font-weight:bold; margin-top: 8px;"></p>
   `;
 
-  // Evento para seleccionar la ruta
   routeItem.addEventListener("click", (e) => {
     if (!e.target.closest('input, label, button')) {
       selectRoute(properties.id);
     }
   });
 
-  // Lógica para el checkbox "Fijar ruta"
   const checkboxFix = routeItem.querySelector(".fix-route");
   checkboxFix.addEventListener("change", (e) => {
     if (e.target.checked) {
@@ -219,10 +212,20 @@ function addRouteToList(properties) {
     populateRoutesList();
   });
 
-  // Lógica para el botón "Agregar alerta"
+  // --- LÓGICA MEJORADA DEL BOTÓN DE ALERTA ---
   const alertButton = routeItem.querySelector(".alert-btn-hybrid");
   alertButton.addEventListener("click", () => {
     const modal = document.getElementById("alertas-modal");
+    const removeButton = document.getElementById("quitar-alerta");
+
+    // Verificamos si la ruta ya tiene una alerta
+    const hasAlert = routeItem.classList.contains('alert-trafico') ||
+      routeItem.classList.contains('alert-construccion') ||
+      routeItem.classList.contains('alert-bloqueo');
+
+    // Mostramos u ocultamos el botón "Quitar Alerta"
+    removeButton.style.display = hasAlert ? 'inline-block' : 'none';
+
     modal.style.display = "flex";
     setTimeout(() => {
       modal.style.opacity = 1;
@@ -393,9 +396,10 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 2000);
 }
 
-/**
- * Manejo del modal de alertas.
- */
+// ==================================================================
+// --- MANEJO DEL MODAL DE ALERTAS (CON LÓGICA PARA QUITAR) ---
+// ==================================================================
+
 function closeModal() {
   const modal = document.getElementById("alertas-modal");
   modal.style.opacity = 0;
@@ -425,6 +429,22 @@ document.getElementById("guardar-alerta").addEventListener("click", () => {
       alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
     }
   }
+  closeModal();
+});
+
+// --- ¡NUEVA FUNCIÓN! ---
+document.getElementById("quitar-alerta").addEventListener("click", () => {
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (!routeId) return;
+
+  const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
+  const alertMessage = routeItem.querySelector(".alert-message");
+
+  // Limpiamos cualquier clase de alerta y el mensaje
+  routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
+  alertMessage.textContent = "";
+
   closeModal();
 });
 

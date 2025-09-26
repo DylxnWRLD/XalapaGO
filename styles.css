@@ -1084,3 +1084,15 @@ body {
 .alert-btn-hybrid .fas {
   margin-right: 6px;
 }
+
+/* --- Estilos para el botón de Quitar Alerta --- */
+/* Pega esto al final de tu archivo styles.css */
+
+.remove-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.remove-btn:hover {
+  background-color: #c82333;
+}
