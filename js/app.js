@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 let availableRoutes = [];
 let searchProximityCircle = null;
 let highlightedStops = [];
+let routeAlerts = {}; // <-- ¡NUEVO! Aquí guardaremos el estado de las alertas.
+
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
   defaultZoom: 13,
@@ -157,85 +159,99 @@ function populateRoutesList() {
   unfixedRouteFeatures.forEach(feature => addRouteToList(feature.properties));
 }
 
-
-// ==================================================================
-// --- VERSIÓN HÍBRIDA Y FINAL DE `addRouteToList` ---
-// ==================================================================
 function addRouteToList(properties) {
-  const routesContainer = document.getElementById('routes-container');
-  const routeItem = document.createElement('div');
-  routeItem.className = 'route-item';
-  routeItem.dataset.id = properties.id;
-  const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
+    const routesContainer = document.getElementById('routes-container');
+    const routeItem = document.createElement('div');
+    routeItem.className = 'route-item';
+    routeItem.dataset.id = properties.id;
+    const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
-  routeItem.innerHTML = `
-    <h4><i class="fas fa-route"></i> ${properties.name}</h4>
-    <p>
-      <strong>Imagen:</strong><br>
-      ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
-    </p>
-    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
-    <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
-    
-    <div class="route-item-actions-hybrid">
-        <label class="action-label">
-            <input type="checkbox" class="fix-route" ${isFixed}> Fijar Ruta
-        </label>
-        <button class="alert-btn-hybrid">
-            <i class="fas fa-exclamation-triangle"></i> Agregar Alerta
-        </button>
-    </div>
-    <p class="alert-message" style="font-weight:bold; margin-top: 8px;"></p>
-  `;
+    // Verificamos si hay una alerta guardada para esta ruta.
+    const currentAlert = routeAlerts[properties.id];
+    const buttonText = currentAlert ? 'Modificar Alerta' : 'Agregar Alerta';
 
-  routeItem.addEventListener("click", (e) => {
-    if (!e.target.closest('input, label, button')) {
-      selectRoute(properties.id);
+    routeItem.innerHTML = `
+        <h4><i class="fas fa-route"></i> ${properties.name}</h4>
+        <p>
+            <strong>Imagen:</strong><br>
+            ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
+        </p>
+        <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
+        <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
+        <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
+        
+        <div class="route-item-actions-hybrid">
+            <label class="action-label">
+                <input type="checkbox" class="fix-route" ${isFixed}> Fijar Ruta
+            </label>
+            <button class="alert-btn-hybrid">
+                <i class="fas fa-exclamation-triangle"></i> ${buttonText}
+            </button>
+        </div>
+        <p class="alert-message" style="font-weight:bold; margin-top: 8px;"></p>
+    `;
+
+    // Si hay una alerta guardada, la mostramos al crear el elemento.
+    if (currentAlert) {
+        const alertMessage = routeItem.querySelector(".alert-message");
+        if (currentAlert === 'trafico') {
+            routeItem.classList.add('alert-trafico');
+            alertMessage.textContent = "Reporte: Tráfico Intenso 🚦";
+        } else if (currentAlert === 'construccion') {
+            routeItem.classList.add('alert-construccion');
+            alertMessage.textContent = "Reporte: Obra en la Vía 🚧";
+        } else if (currentAlert === 'bloqueo') {
+            routeItem.classList.add('alert-bloqueo');
+            alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
+        }
     }
-  });
 
-  const checkboxFix = routeItem.querySelector(".fix-route");
-  checkboxFix.addEventListener("change", (e) => {
-    if (e.target.checked) {
-      if (!fixedRoutes.includes(properties.id)) {
-        fixedRoutes.push(properties.id);
-        drawRouteOnMap(properties.id);
-        drawStopsOnMap(properties.id);
-        showToast("Ruta fijada ✅");
-      }
-    } else {
-      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
-      removeRouteFromMap(properties.id);
-      removeStopsFromMap(properties.id);
-    }
-    populateRoutesList();
-  });
+    routeItem.addEventListener("click", (e) => {
+        if (!e.target.closest('input, label, button')) {
+            selectRoute(properties.id);
+        }
+    });
 
-  // --- LÓGICA MEJORADA DEL BOTÓN DE ALERTA ---
-  const alertButton = routeItem.querySelector(".alert-btn-hybrid");
-  alertButton.addEventListener("click", () => {
-    const modal = document.getElementById("alertas-modal");
-    const removeButton = document.getElementById("quitar-alerta");
+    const checkboxFix = routeItem.querySelector(".fix-route");
+    checkboxFix.addEventListener("change", (e) => {
+        if (e.target.checked) {
+            if (!fixedRoutes.includes(properties.id)) {
+                fixedRoutes.push(properties.id);
+                drawRouteOnMap(properties.id);
+                drawStopsOnMap(properties.id);
+                showToast("Ruta fijada ✅");
+            }
+        } else {
+            fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
+            removeRouteFromMap(properties.id);
+            removeStopsFromMap(properties.id);
+        }
+        populateRoutesList();
+    });
 
-    // Verificamos si la ruta ya tiene una alerta
-    const hasAlert = routeItem.classList.contains('alert-trafico') ||
-      routeItem.classList.contains('alert-construccion') ||
-      routeItem.classList.contains('alert-bloqueo');
+    const alertButton = routeItem.querySelector(".alert-btn-hybrid");
+    alertButton.addEventListener("click", () => {
+        const modal = document.getElementById("alertas-modal");
+        const removeButton = document.getElementById("quitar-alerta");
+        const hasAlert = !!routeAlerts[properties.id];
 
-    // Mostramos u ocultamos el botón "Quitar Alerta"
-    removeButton.style.display = hasAlert ? 'inline-block' : 'none';
+        removeButton.style.display = hasAlert ? 'inline-block' : 'none';
+        modal.style.display = "flex";
+        setTimeout(() => {
+            modal.style.opacity = 1;
+            modal.querySelector('.modal-content').style.transform = 'scale(1)';
+        }, 10);
+        modal.dataset.routeId = properties.id;
+        
+        // Si hay una alerta, pre-seleccionamos la opción correspondiente en el modal.
+        if (hasAlert) {
+            document.querySelector(`input[name="alerta_tipo"][value="${routeAlerts[properties.id]}"]`).checked = true;
+        } else {
+            document.querySelectorAll('input[name="alerta_tipo"]').forEach(radio => radio.checked = false);
+        }
+    });
 
-    modal.style.display = "flex";
-    setTimeout(() => {
-      modal.style.opacity = 1;
-      modal.querySelector('.modal-content').style.transform = 'scale(1)';
-    }, 10);
-    modal.dataset.routeId = properties.id;
-    modal.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
-  });
-
-  routesContainer.appendChild(routeItem);
+    routesContainer.appendChild(routeItem);
 }
 
 
@@ -342,9 +358,6 @@ function searchInRouteData(searchTerm) {
   }
 }
 
-/**
- * Muestra los resultados de la búsqueda en el panel.
- */
 let fixedRoutes = [];
 let fixedStopsLayers = {};
 let fixedRoutesLayers = {};
@@ -385,9 +398,7 @@ function showSearchResults(routeIds, title) {
   }
 }
 
-/**
- * Muestra un mensaje toast.
- */
+
 function showToast(message) {
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -396,10 +407,10 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 2000);
 }
 
-// ==================================================================
-// --- MANEJO DEL MODAL DE ALERTAS (CON LÓGICA PARA QUITAR) ---
-// ==================================================================
 
+// ==================================================================
+// --- MANEJO CENTRALIZADO DE ALERTAS ---
+// ==================================================================
 function closeModal() {
   const modal = document.getElementById("alertas-modal");
   modal.style.opacity = 0;
@@ -408,44 +419,30 @@ function closeModal() {
 }
 
 document.getElementById("guardar-alerta").addEventListener("click", () => {
-  const modal = document.getElementById("alertas-modal");
-  const routeId = modal.dataset.routeId;
-  if (!routeId) return;
-  const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
-  const alertMessage = routeItem.querySelector(".alert-message");
-  routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
-  alertMessage.textContent = "";
-  const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
-  if (selectedAlert) {
-    const alertType = selectedAlert.value;
-    if (alertType === 'trafico') {
-      routeItem.classList.add('alert-trafico');
-      alertMessage.textContent = "Reporte: Tráfico Intenso 🚦";
-    } else if (alertType === 'construccion') {
-      routeItem.classList.add('alert-construccion');
-      alertMessage.textContent = "Reporte: Obra en la Vía 🚧";
-    } else if (alertType === 'bloqueo') {
-      routeItem.classList.add('alert-bloqueo');
-      alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
+    const modal = document.getElementById("alertas-modal");
+    const routeId = modal.dataset.routeId;
+    if (!routeId) return;
+
+    const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
+    if (selectedAlert) {
+        routeAlerts[routeId] = selectedAlert.value;
+    } else {
+        delete routeAlerts[routeId];
     }
-  }
-  closeModal();
+    
+    populateRoutesList();
+    closeModal();
 });
 
-// --- ¡NUEVA FUNCIÓN! ---
 document.getElementById("quitar-alerta").addEventListener("click", () => {
-  const modal = document.getElementById("alertas-modal");
-  const routeId = modal.dataset.routeId;
-  if (!routeId) return;
+    const modal = document.getElementById("alertas-modal");
+    const routeId = modal.dataset.routeId;
+    if (!routeId) return;
 
-  const routeItem = document.querySelector(`.route-item[data-id="${routeId}"]`);
-  const alertMessage = routeItem.querySelector(".alert-message");
-
-  // Limpiamos cualquier clase de alerta y el mensaje
-  routeItem.classList.remove('alert-trafico', 'alert-construccion', 'alert-bloqueo');
-  alertMessage.textContent = "";
-
-  closeModal();
+    delete routeAlerts[routeId];
+    
+    populateRoutesList();
+    closeModal();
 });
 
 document.getElementById("cancelar-alerta").addEventListener("click", closeModal);
