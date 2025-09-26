@@ -185,18 +185,29 @@ function createRouteLayer(feature) {
  */
 function createRoutePopupContent(feature) {
   const props = feature.properties;
+
+  const v = props && props.mujer_segura;
+  const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
+
   return `
     <div class="route-popup">
       <h3 class="route-popup-title">${props.name}</h3>
-      <p><strong>Descripción:</strong> ${props.desc}</p>
-      <p><strong>Notas:</strong> ${props.notes}</p>
-      <p><strong>Horario Pico AM:</strong> ${props.peak_am} unidades</p>
-      <p><strong>Mediodía:</strong> ${props.midday} unidades</p>
-      <p><strong>Horario Pico PM:</strong> ${props.peak_pm} unidades</p>
-      <p><strong>Noche:</strong> ${props.night} unidades</p>
+      <p><strong>Descripción:</strong> ${props.desc ?? '-'}</p>
+      <p><strong>Notas:</strong> ${props.notes ?? '-'}</p>
+
+      <div class="kv">
+        <span class="kv-label">¿Versión “Mujer segura”?</span>
+        <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
+      </div>
+
+      <p><strong>Horario Pico AM:</strong> ${props.peak_am ?? '—'} unidades</p>
+      <p><strong>Mediodía:</strong> ${props.midday ?? '—'} unidades</p>
+      <p><strong>Horario Pico PM:</strong> ${props.peak_pm ?? '—'} unidades</p>
+      <p><strong>Noche:</strong> ${props.night ?? '—'} unidades</p>
     </div>
   `;
 }
+
 
 /**
  * Muestra todas las rutas en el mapa

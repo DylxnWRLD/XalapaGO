@@ -459,53 +459,7 @@ function showToast(message) {
 // ==================================================================
 // --- FUNCIÓN MODIFICADA PARA INTEGRAR LAS MEJORAS DE ALERTA ---
 // ==================================================================
-function addRouteToList(properties) {
-  const routesContainer = document.getElementById('routes-container');
-  const routeItem = document.createElement('div');
-  routeItem.className = 'route-item';
-  routeItem.dataset.id = properties.id;
 
-  const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
-
-  // Se mantiene tu estructura HTML original
-  routeItem.innerHTML = `
-    <h4><i class="fas fa-route"></i> ${properties.name}</h4>
-    <p>
-      <strong>Imagen:</strong><br>
-      ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
-    </p>
-    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
-    <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
-    <p><strong>Fijar ruta</strong><input type="checkbox" class="fix-route" ${isFixed}></p>
-    <p><strong>Agregar alerta</strong><input type="checkbox" class="alertas-ruta"></p>
-    <p class="alert-message" style="font-weight:bold;"></p>
-    <span class="check-feedback" style="display:none; color:green; font-weight:bold; margin-left:10px;">✅ Fijada</span>
-  `;
-
-  routeItem.addEventListener("click", (e) => {
-    if (e.target.tagName.toLowerCase() !== "input") {
-      selectRoute(properties.id);
-    }
-  });
-
-  const checkboxFix = routeItem.querySelector(".fix-route");
-  checkboxFix.addEventListener("change", (e) => {
-    if (e.target.checked) {
-      if (!fixedRoutes.includes(properties.id)) {
-        fixedRoutes.push(properties.id);
-        drawRouteOnMap(properties.id);
-        drawStopsOnMap(properties.id);
-        showToast("Ruta fijada ✅");
-      }
-    } else {
-      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
-      removeRouteFromMap(properties.id);
-      removeStopsFromMap(properties.id);
-      routeItem.style.backgroundColor = ""; // Limpiar si se desfija
-    }
-    populateRoutesList();
-  });
 
   // --- LÓGICA MODIFICADA ---
   // Ahora el checkbox original abre la nueva ventana modal mejorada.
@@ -535,7 +489,7 @@ function addRouteToList(properties) {
   });
 
   routesContainer.appendChild(routeItem);
-}
+
 
 
 // ==================================================================

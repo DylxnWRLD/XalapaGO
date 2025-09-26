@@ -44,20 +44,67 @@ function addRouteToList(properties) {
   const routeItem = document.createElement('div');
   routeItem.className = 'route-item';
   routeItem.dataset.id = properties.id;
+
+const routeFolder = String(properties.name || properties.id || '').trim(); 
+const rawImg = (properties.image || '').trim();
+let imgSrc = '';
+
+if (!rawImg) {
+  imgSrc = `data/rutas/${routeFolder}/bus${routeFolder}.jpg`;
+} else if (/^(https?:)?\/\//.test(rawImg) || rawImg.includes('/')) {
+  imgSrc = rawImg;
+} else {
+  imgSrc = `data/rutas/${routeFolder}/${rawImg}`;
+}
+
+const imgHtml = `
+  <p>
+    <strong>Imagen:</strong><br>
+    <img class="route-img"
+         src="${imgSrc}"
+         alt="${properties.name || properties.id}"
+         style="max-width:100%; height:auto; border-radius:8px; margin:.25rem 0 .5rem;"
+         onerror="
+           // 1) si falla .jpg/.jpeg minúsculas -> intenta mayúsculas
+           if (!this.dataset.up) { this.dataset.up = 1;
+             this.src = this.src.replace(/\\.jpg$/,'\\.JPG').replace(/\\.jpeg$/i,'\\.JPEG'); return;
+           }
+           // 2) si falla, intenta .png
+           if (!this.dataset.png) { this.dataset.png = 1;
+             this.src = this.src.replace(/\\.(jpg|jpeg)$/i,'.png').replace(/\\.(JPG|JPEG)$/i,'.PNG'); return;
+           }
+           // 3) si también falla, muestra guión
+           const p = this.closest('p'); if (p) p.innerHTML = '-';
+         ">
+  </p>
+`;
+
+
+  // Mujer segura…
+  const v = properties.mujer_segura;
+  const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
+
   routeItem.innerHTML = `
     <h4><i class="fas fa-route"></i> ${properties.name}</h4>
-    <p><strong>Descripción:</strong> ${properties.desc}</p>
-    <p><strong>Notas:</strong> ${properties.notes}</p>
-    <p><strong>Unidades:</strong> AM:${properties.peak_am} MD:${properties.midday} PM:${properties.peak_pm} NT:${properties.night}</p>
+    ${imgHtml}
+    <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
+    <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
+    <div class="kv">
+      <span class="kv-label">¿Versión “Mujer segura”?</span>
+      <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
+    </div>
+    <p><strong>Unidades:</strong>
+      AM:${properties.peak_am ?? '—'}
+      MD:${properties.midday ?? '—'}
+      PM:${properties.peak_pm ?? '—'}
+      NT:${properties.night ?? '—'}
+    </p>
   `;
-  
-  // Añadir evento para seleccionar la ruta al hacer clic
-  routeItem.addEventListener('click', function() {
-    selectRoute(properties.id);
-  });
-  
+
+  routeItem.addEventListener('click', function () { selectRoute(properties.id); });
   routesContainer.appendChild(routeItem);
 }
+
 
 
 /**

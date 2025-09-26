@@ -1047,3 +1047,10 @@ body {
   background-color: #fbeae5 !important;
   border-left: 5px solid #dc3545;
 }
+
+.kv { display:flex; align-items:center; gap:.5rem; margin:.35rem 0; }
+.kv-label { font-weight:600; color:#2a2a2a; }
+.badge { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-weight:700; font-size:.85rem; line-height:1; border:1px solid rgba(0,0,0,.08); }
+.badge.ok { background:#e8f7ef; color:#146c2e; }
+.badge.no { background:#fde8ea; color:#8a1c23; }
+.route-img { width:100%; height:auto; border-radius:8px; margin:.25rem 0 .5rem; }
