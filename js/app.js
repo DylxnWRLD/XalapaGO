@@ -1,3 +1,4 @@
+
 /**
  * Inicialización de la aplicación al cargar el DOM.
  */
