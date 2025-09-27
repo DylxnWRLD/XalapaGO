@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt"); // ✅ Para encriptar
 require("dotenv").config();
 
 const app = express();
@@ -28,20 +28,33 @@ const usuarioSchema = new mongoose.Schema({
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
 
-// --- Rutas ---
+// --- Validación de contraseña ---
+function validarPassword(password) {
+  // Ejemplo de requisitos:
+  // - mínimo 8 caracteres
+  // - al menos 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+  return regex.test(password);
+}
 
 // 📌 Registro
 app.post("/registroUsuario", async (req, res) => {
   const { usuario, correo, password } = req.body;
 
   try {
+    if (!validarPassword(password)) {
+      return res.status(400).send(
+        "La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo."
+      );
+    }
+
     const existe = await Usuario.findOne({ usuario });
     if (existe) {
       return res.status(400).send("El usuario ya existe 🚫");
     }
 
     // ✅ Encriptar contraseña antes de guardar
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10); // número de rondas (10 es seguro)
     const hashPassword = await bcrypt.hash(password, salt);
 
     const nuevo = new Usuario({ usuario, correo, password: hashPassword });
@@ -90,3 +103,4 @@ app.post("/login", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
+
