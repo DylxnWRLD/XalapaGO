@@ -900,6 +900,18 @@ body {
     font-size: 12px;
     padding: 8px 12px;
   }
+  
+  form {
+    width: 90%;
+    margin: 50px auto;
+    padding: 20px;
+  }
+
+  form input, 
+  form button {
+    font-size: 14px;
+    padding: 10px;
+  }
 }
 
 /*Estilo Para Tablets*/
