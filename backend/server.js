@@ -62,8 +62,12 @@ app.post("/registroUsuario", async (req, res) => {
     }
 
     const existe = await Usuario.findOne({ usuario });
+    const correoExiste = await Usuario.findOne({ correo });
     if (existe) {
       return res.status(400).send("El usuario ya existe 🚫");
+    }
+    if (correoExiste) {
+      return res.status(400).send("El correo ya está registrado 🚫");
     }
 
     // ✅ Encriptar contraseña antes de guardar
@@ -114,6 +118,8 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
+//Alertas
 const alertaSchema = new mongoose.Schema({
   routeId: String,
   tipo: String,
