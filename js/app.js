@@ -33,6 +33,8 @@ window.allStopsGroup = L.featureGroup();  // Un grupo que contendrá TODAS las c
 window.routesData = { type: "FeatureCollection", features: [] };
 window.stopsData = { type: "FeatureCollection", features: [] };
 
+const API_URL = 'https://xalapago-1.onrender.com'; 
+
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
   defaultZoom: 13,
@@ -46,11 +48,6 @@ const searchAliases = {
   "usbi": "Campus para la Cultura las Artes y el Deporte",
   "cem": "Centro de Alta Especialidad"
 };
-
-(async () => {
-    await loadAlerts(); 
-    populateRoutesList();
-})();
 
 /**
  * Carga las rutas y paradas de forma progresiva y las dibuja.
@@ -623,8 +620,6 @@ function clearHighlightedStops() {
   });
 }
 
-const API_URL = 'https://xalapago-1.onrender.com'; 
-
 /**
  * Carga las alertas desde el servidor y actualiza el objeto local.
  */
@@ -706,4 +701,11 @@ document.getElementById("quitar-alerta").addEventListener("click", async () => {
     populateRoutesList();
     closeModal();
 });
+
+
+(async () => {
+    await loadAlerts(); 
+    populateRoutesList();
+})();
+
 
