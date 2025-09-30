@@ -630,7 +630,8 @@ const API_URL = 'https://xalapago-1.onrender.com';
  */
 async function loadAlerts() {
     try {
-        const res = await fetch('${API_URL}/obtenerAlertas');
+        // ✅ CORREGIDO: Usando comillas invertidas (`)
+        const res = await fetch(`${API_URL}/obtenerAlertas`); 
         if (!res.ok) throw new Error('Error al cargar las alertas del servidor');
         
         const alertsArray = await res.json();
@@ -652,7 +653,8 @@ async function loadAlerts() {
  */
 async function syncAlerts() {
     try {
-        const res = await fetch('${API_URL}/agregarAlerta', {
+        // ✅ CORREGIDO: Usando comillas invertidas (`)
+        const res = await fetch(`${API_URL}/agregarAlerta`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // Envía el OBJETO COMPLETO, incluyendo las eliminaciones (ausencias)
@@ -704,3 +706,4 @@ document.getElementById("quitar-alerta").addEventListener("click", async () => {
     populateRoutesList();
     closeModal();
 });
+
