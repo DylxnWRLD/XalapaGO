@@ -5,6 +5,85 @@
  * 
  * @param {Object} properties objeto con los datos de las paradas
  */
+
+/** ===== Helpers de tiempo estimado por ruta (no invasivos) ===== */
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function speedForMinute(minuteOfDay) {
+  // Perfil simple: horas pico 07–09 y 18–20 más lentas
+  const inWin = (m, a, b) => m >= a && m < b;
+  const m = minuteOfDay % (24*60);
+  if (inWin(m, 7*60, 9*60) || inWin(m, 18*60, 20*60)) return 16; // km/h
+  return 22; // km/h
+}
+function normalizeDwell(x, fallback=30) {
+  if (!Number.isFinite(x) || x < 0 || x > 300) return fallback;
+  return Math.round(x);
+}
+function isSensibleTravelTime(x) {
+  return Number.isFinite(x) && x >= 0 && x <= 1800; // 0–30 min por tramo
+}
+function formatHM_fromSeconds(totalSeconds) {
+  const m = Math.round(totalSeconds / 60);
+  const h = Math.floor(m / 60);
+  const mm = String(m % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${mm} h` : `${m} min`;
+}
+/**
+ * Lee data/rutas/<routeId>/stops.geojson y estima el total de la ruta en segundos.
+ * - Usa travelTime/dwellTime si son razonables; si no, calcula por distancia (Haversine).
+ * - NO escribe nada en disco; sólo calcula y devuelve el total en segundos.
+ */
+async function estimateRouteRuntimeSeconds(routeId) {
+  try {
+    const resp = await fetch(`data/rutas/${routeId}/stops.geojson`);
+    if (!resp.ok) throw new Error('No se pudo leer stops.geojson');
+    const fc = await resp.json();
+    const feats = (fc.features || []).slice()
+      .sort((a,b) => (a.properties?.sequence ?? 0) - (b.properties?.sequence ?? 0));
+
+    let total = 0;
+    let tmin = 7*60; // Minutos desde 00:00 (07:00 referencia para perfil velo.)
+
+    for (let i=0; i<feats.length; i++) {
+      const f = feats[i];
+      const p = f.properties || {};
+      let dwell = normalizeDwell(Number(p.dwellTime)); // si está rara, 30s
+
+      if (i === 0) { // primer punto: sólo dwell
+        total += dwell;
+        continue;
+      }
+
+      const prev = feats[i-1];
+      const [plon, plat] = prev.geometry.coordinates;
+      const [lon, lat] = f.geometry.coordinates;
+
+      const distM = haversineMeters(plat, plon, lat, lon);
+      const vKmh = speedForMinute(tmin);
+      const est = Math.round((distM/1000) / Math.max(vKmh, 1e-6) * 3600); // s
+
+      const tt = isSensibleTravelTime(Number(p.travelTime)) ? Number(p.travelTime) : est;
+      total += tt + dwell;
+
+      // avanzar “reloj” de referencia para el perfil de velocidad
+      tmin += Math.round((tt + dwell)/60);
+    }
+    return total;
+  } catch (e) {
+    console.warn('estimateRouteRuntimeSeconds error:', e);
+    return null; // si falta archivo o falla, devolvemos null
+  }
+}
+
+
 function addStopToList(properties) {
   const stopsContainer = document.getElementById('stops-container');
   const stopItem = document.createElement('div');
@@ -100,6 +179,10 @@ routeItem.innerHTML = `
 
   <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
 
+  <div class="kv runtime-row">
+    <span class="kv-label">Tiempo estimado:</span>
+    <span class="kv-value" id="runtime-${properties.id}">calculando…</span>
+  </div>
 
 
   ${mujerSeguraHtml}   <!-- ← agregado aquí, debajo de Descripción -->
@@ -115,6 +198,12 @@ routeItem.innerHTML = `
   </p>
 `;
 
+estimateRouteRuntimeSeconds(properties.id).then(sec => {
+  const span = routeItem.querySelector(`#runtime-${CSS.escape(String(properties.id))}`);
+  if (span) {
+    span.textContent = (sec == null) ? '—' : formatHM_fromSeconds(sec);
+  }
+});
 
   routeItem.addEventListener('click', function () { selectRoute(properties.id); });
   routesContainer.appendChild(routeItem);

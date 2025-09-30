@@ -1174,3 +1174,8 @@ body {
     font-size: 16px;
     color: #333;
 }
+
+.kv { display:flex; justify-content:space-between; align-items:center; margin:.25rem 0; }
+.kv-label { font-weight:600; }
+.kv-value { font-variant-numeric: tabular-nums; }
+.runtime-row .kv-value { font-weight:700; }

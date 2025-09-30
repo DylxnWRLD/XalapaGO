@@ -237,7 +237,12 @@ function addRouteToList(properties) {
         </p>
         
         <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-        
+
+        <div class="kv runtime-row">
+         <span class="kv-label">Tiempo estimado:</span>
+         <span class="kv-value" id="runtime-${properties.id}">calculando…</span>
+        </div>
+
         ${mujerSeguraHtml} 
 
         <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
