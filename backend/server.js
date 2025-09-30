@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt"); // ✅ Para encriptar
+const bcrypt = require("bcrypt");
 require("dotenv").config();
 
 const app = express();
@@ -98,6 +98,55 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error en el servidor" });
+  }
+});
+
+const alertaSchema = new mongoose.Schema({
+  routeId: String,
+  tipo: String,
+});
+
+const Alerta = mongoose.model("Alerta", alertaSchema);
+
+// 📌 Agregar/Sincronizar Alerta (Ahora sin logs de éxito)
+app.post("/agregarAlerta", async (req, res) => {
+  try {
+    const { routeAlerts } = req.body;
+
+    // 1. Eliminar todas las alertas existentes en la colección
+    await Alerta.deleteMany({});
+
+    const rutasConAlerta = Object.keys(routeAlerts).length;
+
+    if (rutasConAlerta > 0) {
+      // 2. Crear el array de alertas a insertar solo si hay alguna
+      const alertasArray = Object.entries(routeAlerts).map(([routeId, tipo]) => ({
+        routeId,
+        tipo
+      }));
+
+      // 3. Insertar las alertas enviadas por el cliente
+      await Alerta.insertMany(alertasArray);
+    }
+
+    res.status(200).json({ ok: true, message: "Alertas guardadas" });
+
+  } catch (err) {
+    console.error("❌ Error al guardar alertas:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Obtener Alertas
+app.get("/obtenerAlertas", async (req, res) => {
+  try {
+    // Encuentra todos los documentos en la colección Alerta
+    const alertas = await Alerta.find({});
+
+    res.status(200).json(alertas);
+  } catch (err) {
+    console.error("❌ Error al obtener alertas:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 

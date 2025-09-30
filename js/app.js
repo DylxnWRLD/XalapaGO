@@ -3,13 +3,21 @@
  * Inicialización de la aplicación al cargar el DOM.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadData();
-  initMap();
-  enableUserLocation();
-  setupEventListeners();
-  setupSearchFunctionality();
-  clearHighlightedStops();
-  updateUI();
+    // 1. Inicialización INMEDIATA de UI y Mapa para la percepción de velocidad.
+    initMap(); 
+    setupEventListeners();
+    setupSearchFunctionality();
+    
+    // 2. Tareas secundarias y de fondo
+    enableUserLocation();
+    clearHighlightedStops();
+    
+    // 3. Carga de datos ASÍNCRONA y progresiva.
+    await detectAvailableRoutes(); // Solo esperamos el índice
+    await loadAllRoutesProgressively(); // Lanza la carga y el dibujo en el mapa
+    
+    // 4. Actualización final de la UI (listas y estadísticas)
+    updateUI(); 
 });
 
 /** * Variables globales de la aplicación.
@@ -17,7 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 let availableRoutes = [];
 let searchProximityCircle = null;
 let highlightedStops = [];
-let routeAlerts = {}; // <-- ¡NUEVO! Aquí guardaremos el estado de las alertas.
+let routeAlerts = {};
+window.routeLayers = {}; // {'Ruta-01': L.geoJson(...), 'Ruta-02': L.geoJson(...), ...}
+window.stopLayers = {};   // {'Ruta-01': L.markerClusterGroup(...), ...}
+window.allRoutesGroup = L.featureGroup(); // Un grupo que contendrá TODAS las capas de rutas
+window.allStopsGroup = L.featureGroup();  // Un grupo que contendrá TODAS las capas de paradas
+window.routesData = { type: "FeatureCollection", features: [] };
+window.stopsData = { type: "FeatureCollection", features: [] };
 
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
@@ -33,32 +47,65 @@ const searchAliases = {
   "cem": "Centro de Alta Especialidad"
 };
 
+(async () => {
+    await loadAlerts(); 
+    populateRoutesList();
+})();
+
 /**
- * Carga los datos de rutas y paradas desde los archivos GeoJSON.
+ * Carga las rutas y paradas de forma progresiva y las dibuja.
  */
-async function loadData() {
-  try {
-    window.routesData = { type: "FeatureCollection", features: [] };
-    window.stopsData = { type: "FeatureCollection", features: [] };
-    await detectAvailableRoutes();
-    for (const routeId of availableRoutes) {
-      try {
+async function loadAllRoutesProgressively() {
+    try {
+        // Usar Promise.all para cargar TODAS las rutas en paralelo
+        // pero mapeando la promesa para que cada una se procese y dibuje individualmente.
+        const loadingPromises = availableRoutes.map(routeId => 
+            loadAndDrawSingleRoute(routeId)
+        );
+
+        // Esperar a que TODAS las promesas de carga y dibujo se completen.
+        // Esto asegura que `updateUI` (que llama a `populateRoutesList`)
+        // solo se ejecute cuando *todos* los datos estén en `window.routesData` y `window.stopsData`.
+        await Promise.all(loadingPromises);
+        
+        assignRouteColors();
+
+    } catch (error) {
+        console.error('Error al cargar datos progresivamente:', error);
+    }
+}
+
+/**
+ * Carga y procesa una sola ruta (route y stops) y la añade a las estructuras globales.
+ */
+async function loadAndDrawSingleRoute(routeId) {
+    try {
         const [routeResponse, stopsResponse] = await Promise.all([
-          fetch(`data/rutas/${routeId}/routes.geojson`),
-          fetch(`data/rutas/${routeId}/stops.geojson`)
+            fetch(`data/rutas/${routeId}/routes.geojson`),
+            fetch(`data/rutas/${routeId}/stops.geojson`)
         ]);
+
         const routeData = await routeResponse.json();
         const stopsData = await stopsResponse.json();
-        if (routeData.features?.length > 0) window.routesData.features.push(routeData.features[0]);
-        if (stopsData.features?.length > 0) window.stopsData.features = window.stopsData.features.concat(stopsData.features);
-      } catch (error) {
+
+        // **PASO CLAVE:** Manipulación de datos y dibujo en el mapa
+        // Se hace de forma síncrona DESPUÉS de recibir el JSON, pero
+        // es no-bloqueante en relación con la carga de otras rutas.
+        if (routeData.features?.length > 0) {
+            const routeFeature = routeData.features[0];
+            routeFeature.properties.id = routeId; // Asegura que el ID esté en las propiedades
+            window.routesData.features.push(routeFeature);
+        }
+
+        if (stopsData.features?.length > 0) {
+            // Asigna la ruta a cada parada para la futura identificación/filtrado
+            stopsData.features.forEach(stop => stop.properties.routeId = routeId);
+            window.stopsData.features = window.stopsData.features.concat(stopsData.features);
+        }
+        
+    } catch (error) {
         console.error(`Error al cargar la ruta ${routeId}:`, error);
-      }
     }
-    assignRouteColors();
-  } catch (error) {
-    console.error('Error al cargar los datos:', error);
-  }
 }
 
 /**
@@ -575,3 +622,83 @@ function clearHighlightedStops() {
     item.style.borderLeft = 'none';
   });
 }
+
+/**
+ * Carga las alertas desde el servidor y actualiza el objeto local.
+ */
+async function loadAlerts() {
+    try {
+        const res = await fetch('http://localhost:3000/obtenerAlertas');
+        if (!res.ok) throw new Error('Error al cargar las alertas del servidor');
+        
+        const alertsArray = await res.json();
+        
+        // Convertir el array de alertas en el objeto routeAlerts local
+        routeAlerts = {}; // Limpia el objeto
+        alertsArray.forEach(alert => {
+            routeAlerts[alert.routeId] = alert.tipo;
+        });
+
+        console.log("✅ Alertas cargadas en el cliente:", routeAlerts);
+    } catch (error) {
+        console.error('❌ Error al cargar las alertas iniciales:', error);
+    }
+}
+
+/**
+ * Función para enviar el estado de routeAlerts al servidor.
+ */
+async function syncAlerts() {
+    try {
+        const res = await fetch('http://localhost:3000/agregarAlerta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Envía el OBJETO COMPLETO, incluyendo las eliminaciones (ausencias)
+            body: JSON.stringify({ routeAlerts }) 
+        });
+
+        console.log("📡 Estado HTTP:", res.status);
+        const text = await res.text();
+        console.log("📦 Respuesta cruda:", text);
+
+        if (!res.ok) throw new Error('Error al enviar la alerta al servidor');
+        
+        console.log("✅ Alertas sincronizadas con el servidor.");
+    } catch (error) {
+        console.error('❌ Error al sincronizar alertas:', error);
+    }
+}
+
+// --- Lógica del Botón "Guardar Alerta" ---
+document.getElementById("guardar-alerta").addEventListener("click", async () => {
+    const modal = document.getElementById("alertas-modal");
+    const routeId = modal.dataset.routeId;
+    if (!routeId) return;
+
+    const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
+    if (selectedAlert) {
+        routeAlerts[routeId] = selectedAlert.value;
+    } else {
+        delete routeAlerts[routeId];
+    }
+    
+    await syncAlerts();
+
+    populateRoutesList();
+    closeModal();
+});
+
+
+// --- Lógica del Botón "Quitar Alerta" ---
+document.getElementById("quitar-alerta").addEventListener("click", async () => {
+    const modal = document.getElementById("alertas-modal");
+    const routeId = modal.dataset.routeId;
+    if (!routeId) return;
+
+    delete routeAlerts[routeId]; 
+    
+    await syncAlerts(); 
+
+    populateRoutesList();
+    closeModal();
+});
