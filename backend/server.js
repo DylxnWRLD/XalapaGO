@@ -7,7 +7,14 @@ require("dotenv").config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+// 💡 CONFIGURACIÓN DE CORS
+const corsOptions = {
+    // Reemplaza con el dominio exacto de tu frontend (GitHub Pages)
+    origin: 'https://dylxnwrld.github.io', 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Si usas cookies/sesiones
+};
+app.use(cors(corsOptions));
 
 // 🔑 Conectar a MongoDB Atlas
 const mongoURI = process.env.MONGO_URI;
