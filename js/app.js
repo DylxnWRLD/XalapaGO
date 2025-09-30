@@ -623,12 +623,14 @@ function clearHighlightedStops() {
   });
 }
 
+const API_URL = 'https://xalapago-1.onrender.com'; 
+
 /**
  * Carga las alertas desde el servidor y actualiza el objeto local.
  */
 async function loadAlerts() {
     try {
-        const res = await fetch('http://localhost:3000/obtenerAlertas');
+        const res = await fetch('${API_URL}/obtenerAlertas');
         if (!res.ok) throw new Error('Error al cargar las alertas del servidor');
         
         const alertsArray = await res.json();
@@ -650,7 +652,7 @@ async function loadAlerts() {
  */
 async function syncAlerts() {
     try {
-        const res = await fetch('http://localhost:3000/agregarAlerta', {
+        const res = await fetch('${API_URL}/agregarAlerta', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // Envía el OBJETO COMPLETO, incluyendo las eliminaciones (ausencias)

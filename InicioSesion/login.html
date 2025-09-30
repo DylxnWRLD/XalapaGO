@@ -54,9 +54,10 @@
       e.preventDefault();
       const user = document.getElementById("usuario").value;
       const pass = document.getElementById("password").value;
+      const API_URL = 'https://xalapago-1.onrender.com';
 
       try {
-        const res = await fetch("http://localhost:3000/login", {
+        const res = await fetch("${API_URL}/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuario: user, password: pass })

@@ -64,9 +64,10 @@
       const usuario = document.getElementById("usuario").value;
       const correo = document.getElementById("correo").value;
       const password = document.getElementById("password").value;
+      const API_URL = 'https://xalapago-1.onrender.com';
 
       try {
-        const res = await fetch("http://localhost:3000/registroUsuario", {
+        const res = await fetch("${API_URL}/registroUsuario", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuario, correo, password })
