@@ -9,8 +9,8 @@ const app = express();
 app.use(express.json());
 // 💡 CONFIGURACIÓN DE CORS
 const corsOptions = {
-    // Reemplaza con el dominio exacto de tu frontend (GitHub Pages)
-    origin: 'https://dylxnwrld.github.io/XalapaGO/', 
+    // ✅ CORRECCIÓN: SOLO EL DOMINIO PRINCIPAL
+    origin: 'https://dylxnwrld.github.io', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Si usas cookies/sesiones
 };
@@ -43,6 +43,12 @@ function validarPassword(password) {
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
   return regex.test(password);
 }
+
+// 📌 RUTA DE PRUEBA (HEALTH CHECK)
+// Responde a la URL base de Render (https://xalapago-1.onrender.com/)
+app.get("/", (req, res) => {
+    res.status(200).send("Servidor API de XalapaGO está activo y funcionando. La API está disponible en rutas como /login y /obtenerAlertas.");
+});
 
 // 📌 Registro
 app.post("/registroUsuario", async (req, res) => {
@@ -159,4 +165,3 @@ app.get("/obtenerAlertas", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
-
