@@ -64,23 +64,28 @@
       const usuario = document.getElementById("usuario").value;
       const correo = document.getElementById("correo").value;
       const password = document.getElementById("password").value;
+      const API_URL = 'https://xalapago-1.onrender.com';
 
       try {
-        const res = await fetch("http://localhost:3000/registroUsuario", {
+        const res = await fetch(`${API_URL}/registroUsuario`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuario, correo, password })
         });
 
-        const msg = await res.text();
-        alert(msg);
+        // NOTA: El servidor de registro responde con res.text() si es error 400, y res.send() si es 201.
+        const msg = await res.text(); 
 
         if (res.ok) {
-          // Si el registro fue exitoso, ir al login
+          alert(msg); // Muestra el mensaje de éxito del servidor.
           window.location.href = "../InicioSesion/login.html";
+        } else {
+            // Si el estado es 400/500, el mensaje contiene el error (ej: "El usuario ya existe 🚫")
+            alert(msg || "Error al registrar usuario.");
         }
       } catch (err) {
-        alert("❌ Error al conectar con el servidor");
+        console.error("Error detallado al registrar:", err);
+        alert("❌ Error al conectar con el servidor. Verifica tu conexión o intenta más tarde.");
       }
     });
   </script>

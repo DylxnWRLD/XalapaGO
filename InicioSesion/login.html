@@ -54,9 +54,10 @@
       e.preventDefault();
       const user = document.getElementById("usuario").value;
       const pass = document.getElementById("password").value;
+      const API_URL = 'https://xalapago-1.onrender.com';
 
       try {
-        const res = await fetch("http://localhost:3000/login", {
+        const res = await fetch(`${API_URL}/login`, { 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuario: user, password: pass })
@@ -65,7 +66,6 @@
         const data = await res.json();
 
         if (res.ok) {
-          // Usar el mensaje que viene desde el backend
           alert(data.message); // Bienvenido <usuario>
           localStorage.setItem("token", data.token);
           window.location.href = "../index.html";
@@ -73,8 +73,9 @@
           alert(data.message || "Usuario o contraseña incorrectos 🚫");
         }
       } catch (error) {
-        console.error(error);
-        alert("Error de conexion con el servidor");
+        console.error("Error detallado:", error);
+        // El mensaje de error ahora solo aparecerá por fallos de red real, no por sintaxis.
+        alert("Error de conexión con el servidor");
       }
     });
   </script>

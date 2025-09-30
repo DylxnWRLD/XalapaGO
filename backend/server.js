@@ -7,7 +7,14 @@ require("dotenv").config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+// 💡 CONFIGURACIÓN DE CORS
+const corsOptions = {
+    // ✅ CORRECCIÓN: SOLO EL DOMINIO PRINCIPAL
+    origin: 'https://dylxnwrld.github.io', 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Si usas cookies/sesiones
+};
+app.use(cors(corsOptions));
 
 // 🔑 Conectar a MongoDB Atlas
 const mongoURI = process.env.MONGO_URI;
@@ -37,6 +44,12 @@ function validarPassword(password) {
   return regex.test(password);
 }
 
+// 📌 RUTA DE PRUEBA (HEALTH CHECK)
+// Responde a la URL base de Render (https://xalapago-1.onrender.com/)
+app.get("/", (req, res) => {
+    res.status(200).send("Servidor API de XalapaGO está activo y funcionando. La API está disponible en rutas como /login y /obtenerAlertas.");
+});
+
 // 📌 Registro
 app.post("/registroUsuario", async (req, res) => {
   const { usuario, correo, password } = req.body;
@@ -49,8 +62,12 @@ app.post("/registroUsuario", async (req, res) => {
     }
 
     const existe = await Usuario.findOne({ usuario });
+    const correoExiste = await Usuario.findOne({ correo });
     if (existe) {
       return res.status(400).send("El usuario ya existe 🚫");
+    }
+    if (correoExiste) {
+      return res.status(400).send("El correo ya está registrado 🚫");
     }
 
     // ✅ Encriptar contraseña antes de guardar
@@ -101,6 +118,8 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
+//Alertas
 const alertaSchema = new mongoose.Schema({
   routeId: String,
   tipo: String,
@@ -152,4 +171,3 @@ app.get("/obtenerAlertas", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`));
-
