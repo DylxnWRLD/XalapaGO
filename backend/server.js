@@ -10,7 +10,7 @@ app.use(express.json());
 // 💡 CONFIGURACIÓN DE CORS
 const corsOptions = {
     // Reemplaza con el dominio exacto de tu frontend (GitHub Pages)
-    origin: 'https://dylxnwrld.github.io', 
+    origin: 'https://dylxnwrld.github.io/XalapaGO/', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Si usas cookies/sesiones
 };
