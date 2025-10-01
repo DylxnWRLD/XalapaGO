@@ -1138,6 +1138,64 @@ body {
 .badge.ok { background:#e8f7ef; color:#146c2e; }  /* Sí */
 .badge.no { background:#fde8ea; color:#8a1c23; }  /* No */
 
+
+
+/* ESTILOS PARA DESFIJAR RUTAS*/
+
+/* Estilos para el contenedor del encabezado de rutas fijadas */
+.fixed-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  padding-right: 15px;
+}
+
+/* Estilos para el botón "Desfijar todo" */
+.unpin-all-btn {
+  /* Diseño base del botón */
+  background-color: #2c5aa0;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+/* Estilos al pasar el ratón (hover) */
+.unpin-all-btn:hover {
+  background-color: #003b7b;
+}
+
+/* Estilos al hacer clic (activo) */
+.unpin-all-btn:active {
+  background-color: #c62828;
+  transform: translateY(1px);
+}
+
+/* Estilos para el ícono dentro del botón */
+.unpin-all-btn i {
+  margin-right: 5px;
+}
+
+/* Estilo para el título h5 para que se vea bien junto al botón */
+.fixed-header-container h5 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.kv { display:flex; justify-content:space-between; align-items:center; margin:.25rem 0; }
+.kv-label { font-weight:600; }
+.kv-value { font-variant-numeric: tabular-nums; }
+.runtime-row .kv-value { font-weight:700; }
+
 /* Estilo para el botón "Todas las rutas" cuando está seleccionado */
 .route-item--all.selected {
   background-color: #eaf2fa;
