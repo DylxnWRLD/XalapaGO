@@ -1202,3 +1202,20 @@ body {
     font-size: 16px;
     color: #333;
 }
+
+.kv { display:flex; justify-content:space-between; align-items:center; margin:.25rem 0; }
+.kv-label { font-weight:600; }
+.kv-value { font-variant-numeric: tabular-nums; }
+.runtime-row .kv-value { font-weight:700; }
+
+/* Estilo para el botón "Todas las rutas" cuando está seleccionado */
+.route-item--all.selected {
+  background-color: #eaf2fa;
+  border-left: 4px solid #3498db;
+}
+
+/* Estilo para una ruta individual cuando está seleccionada */
+.route-item.selected-route {
+  background-color: #f0f7ff;
+  border-left: 4px solid #2980b9;
+}
