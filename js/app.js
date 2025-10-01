@@ -211,14 +211,15 @@ function addRouteToList(properties) {
     routeItem.dataset.id = properties.id;
     const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
-    // Verificamos si hay una alerta guardada para esta ruta.
+    // Verificamos si hay una alerta guardada para esta ruta
     const currentAlert = routeAlerts[properties.id];
+
+    // Botón de alerta siempre visible, el click decidirá si abrir modal o redirigir
     const buttonText = currentAlert ? 'Modificar Alerta' : 'Agregar Alerta';
-    
-    //Construcción de mujer segura de acuerdo al booleano en la ruta:
+
+    // Manejo de "Mujer segura"
     const v = properties.mujer_segura;
     const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
-
     const mujerSeguraHtml = `
       <div class="kv mujer-segura-row">
         <span class="kv-label">¿Versión “Mujer segura”?</span>
@@ -226,25 +227,21 @@ function addRouteToList(properties) {
       </div>
     `;
 
+    // Construcción del HTML de la ruta
     routeItem.innerHTML = `
         <h4><i class="fas fa-route"></i> ${properties.name}</h4>
         <p>
             <strong>Imagen:</strong><br>
             ${properties.image ? `<img src="data/rutas/${properties.name}/${properties.image}" alt="${properties.name}" style="max-width:100%; height:auto;">` : '-'}
         </p>
-        
         <p><strong>Descripción:</strong> ${properties.desc ?? '-'}</p>
-
         <div class="kv runtime-row">
          <span class="kv-label">Tiempo estimado:</span>
          <span class="kv-value" id="runtime-${properties.id}">calculando…</span>
         </div>
-
-        ${mujerSeguraHtml} 
-
+        ${mujerSeguraHtml}
         <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
         <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
-        
         <div class="route-item-actions-hybrid">
             <label class="action-label">
                 <input type="checkbox" class="fix-route" ${isFixed}> Fijar Ruta
@@ -256,7 +253,7 @@ function addRouteToList(properties) {
         <p class="alert-message" style="font-weight:bold; margin-top: 8px;"></p>
     `;
 
-    // Si hay una alerta guardada, la mostramos al crear el elemento.
+    // Mostrar alerta visual si existe
     if (currentAlert) {
         const alertMessage = routeItem.querySelector(".alert-message");
         if (currentAlert === 'trafico') {
@@ -271,12 +268,14 @@ function addRouteToList(properties) {
         }
     }
 
+    // Seleccionar ruta al hacer click en el div
     routeItem.addEventListener("click", (e) => {
         if (!e.target.closest('input, label, button')) {
             selectRoute(properties.id);
         }
     });
 
+    // Checkbox "Fijar Ruta"
     const checkboxFix = routeItem.querySelector(".fix-route");
     checkboxFix.addEventListener("change", (e) => {
         if (e.target.checked) {
@@ -294,8 +293,17 @@ function addRouteToList(properties) {
         populateRoutesList();
     });
 
+    // Botón de alerta
     const alertButton = routeItem.querySelector(".alert-btn-hybrid");
     alertButton.addEventListener("click", () => {
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuario) {
+            // Redirige a registro si no está loggeado
+            window.location.href = '/InicioSesion/registroUsuario.html';
+            return;
+        }
+
+        // Usuario loggeado → abrir modal como antes
         const modal = document.getElementById("alertas-modal");
         const removeButton = document.getElementById("quitar-alerta");
         const hasAlert = !!routeAlerts[properties.id];
@@ -307,8 +315,7 @@ function addRouteToList(properties) {
             modal.querySelector('.modal-content').style.transform = 'scale(1)';
         }, 10);
         modal.dataset.routeId = properties.id;
-        
-        // Si hay una alerta, pre-seleccionamos la opción correspondiente en el modal.
+
         if (hasAlert) {
             document.querySelector(`input[name="alerta_tipo"][value="${routeAlerts[properties.id]}"]`).checked = true;
         } else {
