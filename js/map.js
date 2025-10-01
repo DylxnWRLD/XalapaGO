@@ -149,15 +149,6 @@ function loadRoutes() {
       layer: routeLayer
     });
   });
-
-  // Mostrar todas las rutas inicialmente
-  showAllRoutes();
-
-  // Ajustar vista del mapa para mostrar todas las rutas
-  if (allRouteLayers.length > 0) {
-    const group = L.featureGroup(allRouteLayers.map(r => r.layer));
-    map.fitBounds(group.getBounds());
-  }
 }
 
 /**
@@ -455,8 +446,8 @@ function loadStops() {
     marker.on('click', () => highlightStop(stop.properties.id));
   });
 
-  // Mostrar todas las paradas inicialmente
-  showAllStops();
+  // // Mostrar todas las paradas inicialmente
+  // showAllStops();
 }
 
 /**
