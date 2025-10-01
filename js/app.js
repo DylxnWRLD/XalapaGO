@@ -1,4 +1,3 @@
-
 /**
  * Inicialización de la aplicación al cargar el DOM.
  */
@@ -26,6 +25,7 @@ let availableRoutes = [];
 let searchProximityCircle = null;
 let highlightedStops = [];
 let routeAlerts = {};
+let isAllRoutesSelected = false; // Variable para el estado del botón "Todas las rutas"
 window.routeLayers = {}; // {'Ruta-01': L.geoJson(...), 'Ruta-02': L.geoJson(...), ...}
 window.stopLayers = {};   // {'Ruta-01': L.markerClusterGroup(...), ...}
 window.allRoutesGroup = L.featureGroup(); // Un grupo que contendrá TODAS las capas de rutas
@@ -173,11 +173,31 @@ function populateRoutesList() {
   const allItem = document.createElement('div');
   allItem.className = 'route-item route-item--all';
   allItem.innerHTML = `<h4><i class="fas fa-layer-group"></i> Todas las rutas</h4><p>Ver todas las rutas y paradas</p>`;
+  
   allItem.addEventListener('click', () => {
-    document.getElementById('search-place').value = '';
-    selectRoute('all');
+    // Quitar la selección de cualquier ruta individual
+    document.querySelectorAll('.route-item.selected-route').forEach(item => item.classList.remove('selected-route'));
+
+    if (isAllRoutesSelected) {
+      // Si ya está seleccionado, deseleccionar y limpiar el mapa
+      selectRoute('none'); 
+      isAllRoutesSelected = false;
+      allItem.classList.remove('selected');
+    } else {
+      // Si no está seleccionado, seleccionar y mostrar todas las rutas
+      selectRoute('all');
+      isAllRoutesSelected = true;
+      allItem.classList.add('selected');
+    }
     clearHighlightedStops();
+    document.getElementById('search-place').value = '';
   });
+
+  // Si el estado ya era seleccionado, mantener el estilo al redibujar
+  if (isAllRoutesSelected) {
+    allItem.classList.add('selected');
+  }
+
   routesContainer.appendChild(allItem);
 
   const fixedRouteFeatures = [];
@@ -269,6 +289,17 @@ function addRouteToList(properties) {
     routeItem.addEventListener("click", (e) => {
         if (!e.target.closest('input, label, button')) {
             selectRoute(properties.id);
+            
+            // Deseleccionar el botón "Todas las rutas"
+            isAllRoutesSelected = false;
+            const allRoutesButton = document.querySelector('.route-item--all');
+            if (allRoutesButton) {
+              allRoutesButton.classList.remove('selected');
+            }
+
+            // Marcar visualmente la ruta seleccionada
+            document.querySelectorAll('.route-item.selected-route').forEach(item => item.classList.remove('selected-route'));
+            routeItem.classList.add('selected-route');
         }
     });
 
@@ -356,7 +387,11 @@ function setupSearchFunctionality() {
 async function performSearch() {
   const searchTerm = document.getElementById('search-place').value.trim();
   if (!searchTerm) return alert('Por favor, ingresa un lugar para buscar');
+  
+  // Limpiar selección de rutas y estado
   selectRoute('none');
+  isAllRoutesSelected = false;
+
   clearHighlightedStops();
   document.getElementById('routes-container').innerHTML = '';
   try {
@@ -429,11 +464,19 @@ function showSearchResults(routeIds, title) {
   resultsHeader.className = 'search-results-header';
   resultsHeader.innerHTML = `<h3>${title}</h3><button id="clear-search" class="clear-search-btn"><i class="fas fa-times"></i> Limpiar búsqueda</button>`;
   routesContainer.appendChild(resultsHeader);
+  
   document.getElementById('clear-search').addEventListener('click', () => {
     document.getElementById('search-place').value = '';
     populateRoutesList();
-    selectRoute('all');
+    selectRoute('all'); // Mostrar todas las rutas por defecto
     clearHighlightedStops();
+    
+    // Marcar "Todas las rutas" como seleccionado
+    isAllRoutesSelected = true;
+    const allRoutesButton = document.querySelector('.route-item--all');
+    if (allRoutesButton) {
+      allRoutesButton.classList.add('selected');
+    }
   });
 
   const fixedMatches = [];
@@ -707,5 +750,3 @@ document.getElementById("quitar-alerta").addEventListener("click", async () => {
     await loadAlerts(); 
     populateRoutesList();
 })();
-
-
