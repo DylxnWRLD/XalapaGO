@@ -299,7 +299,7 @@ function addRouteToList(properties) {
         const usuario = JSON.parse(localStorage.getItem('usuario'));
         if (!usuario) {
             // Redirige a registro si no está loggeado
-            window.location.href = '/InicioSesion/registroUsuario.html';
+            window.location.href = "../InicioSesion/registroUsuario.html";
             return;
         }
 
