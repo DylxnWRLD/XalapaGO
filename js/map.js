@@ -126,6 +126,24 @@ function clearLayers(layers) {
   layers.forEach(layer => map.removeLayer(layer));
 }
 
+/** Botón para centrar la ubicación del usuario */
+document.addEventListener('DOMContentLoaded', () => {
+  const btnCentrar = document.getElementById('btn-centrar');
+  if (btnCentrar) {
+    btnCentrar.addEventListener('click', () => {
+      if (currentUserLocation && map) {
+        map.setView([currentUserLocation.lat, currentUserLocation.lng], 17, {
+          animate: true,
+          duration: 0.5
+        });
+      } else {
+        alert("Ubicación del usuario no disponible aún.");
+      }
+    });
+  }
+});
+
+
 // =============================================
 // GESTIÓN DE RUTAS
 // =============================================
@@ -445,9 +463,6 @@ function loadStops() {
     // Configurar evento para resaltar la parada al hacer clic
     marker.on('click', () => highlightStop(stop.properties.id));
   });
-
-  // // Mostrar todas las paradas inicialmente
-  // showAllStops();
 }
 
 /**
@@ -580,7 +595,14 @@ function selectRoute(routeId) {
       const group = L.featureGroup(allRouteLayers.map(r => r.layer));
       map.fitBounds(group.getBounds());
     }
-  } else {
+  } else if (routeId === 'none') {
+    // Limpiar el mapa
+    clearLayers(routeLayers);
+    clearLayers(stopLayers);
+    routeLayers = [];
+    stopLayers = [];
+  }
+  else {
     showSingleRoute(routeId);
     showSingleRouteStops(routeId);
   }
@@ -844,6 +866,11 @@ function updateNearestStop() {
   if (nearestStopMarker) {
     map.removeLayer(nearestStopMarker);
     nearestStopMarker = null;
+  }
+  
+  // Condición para solo buscar parada si hay rutas VISIBLES
+  if (routeLayers.length === 0) {
+    return;
   }
 
   // Encontrar la parada más cercana
