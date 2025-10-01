@@ -126,6 +126,24 @@ function clearLayers(layers) {
   layers.forEach(layer => map.removeLayer(layer));
 }
 
+/** Botón para centrar la ubicación del usuario */
+document.addEventListener('DOMContentLoaded', () => {
+  const btnCentrar = document.getElementById('btn-centrar');
+  if (btnCentrar) {
+    btnCentrar.addEventListener('click', () => {
+      if (currentUserLocation && map) {
+        map.setView([currentUserLocation.lat, currentUserLocation.lng], 17, {
+          animate: true,
+          duration: 0.5
+        });
+      } else {
+        alert("Ubicación del usuario no disponible aún.");
+      }
+    });
+  }
+});
+
+
 // =============================================
 // GESTIÓN DE RUTAS
 // =============================================
