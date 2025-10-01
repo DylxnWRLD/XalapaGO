@@ -291,6 +291,16 @@ function addRouteToList(properties) {
 
     const alertButton = routeItem.querySelector(".alert-btn-hybrid");
     alertButton.addEventListener("click", () => {
+        // ✅ INICIO DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // El usuario NO está logueado. Redirigir a la página de registro.
+            // Asegúrate de que la ruta sea correcta desde el index.html
+            window.location.href = "InicioSesion/registroUsuario.html"; 
+            return; // Detener la ejecución para no abrir el modal
+        }
+        // ✅ FIN DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
+        
         const modal = document.getElementById("alertas-modal");
         const removeButton = document.getElementById("quitar-alerta");
         const hasAlert = !!routeAlerts[properties.id];
