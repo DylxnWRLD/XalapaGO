@@ -445,9 +445,6 @@ function loadStops() {
     // Configurar evento para resaltar la parada al hacer clic
     marker.on('click', () => highlightStop(stop.properties.id));
   });
-
-  // // Mostrar todas las paradas inicialmente
-  // showAllStops();
 }
 
 /**
@@ -580,7 +577,14 @@ function selectRoute(routeId) {
       const group = L.featureGroup(allRouteLayers.map(r => r.layer));
       map.fitBounds(group.getBounds());
     }
-  } else {
+  } else if (routeId === 'none') {
+    // Limpiar el mapa
+    clearLayers(routeLayers);
+    clearLayers(stopLayers);
+    routeLayers = [];
+    stopLayers = [];
+  }
+  else {
     showSingleRoute(routeId);
     showSingleRouteStops(routeId);
   }
@@ -844,6 +848,11 @@ function updateNearestStop() {
   if (nearestStopMarker) {
     map.removeLayer(nearestStopMarker);
     nearestStopMarker = null;
+  }
+  
+  // Condición para solo buscar parada si hay rutas VISIBLES
+  if (routeLayers.length === 0) {
+    return;
   }
 
   // Encontrar la parada más cercana
