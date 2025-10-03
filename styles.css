@@ -880,7 +880,7 @@ body {
 @media (max-width: 768px) {
   body {
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .header h1 {
