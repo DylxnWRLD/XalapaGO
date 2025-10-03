@@ -19,8 +19,8 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%);
-  color: white;
+  background: linear-gradient(135deg, #2c5aa0 0%, #254787 100%);
+  color: rgb(255, 255, 255);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1209,4 +1209,35 @@ body {
 .route-item.selected-route {
   background-color: #f0f7ff;
   border-left: 4px solid #2980b9;
+}
+
+/* Ajustes responsivos para login en móviles */
+@media (max-width: 600px) {
+  .route-info {
+    max-width: 95% !important;  /* Que ocupe casi toda la pantalla */
+    padding: 20px !important;
+    font-size: 16px;  /* Texto más legible */
+  }
+
+  .route-info h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .filter-group label {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+
+  .filter-group input {
+    font-size: 16px;
+    padding: 12px;
+    height: 45px;
+  }
+
+  button, .style-button.active {
+    font-size: 16px !important;
+    padding: 14px !important;
+    height: 48px;
+  }
 }
