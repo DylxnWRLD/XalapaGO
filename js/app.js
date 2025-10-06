@@ -1,4 +1,4 @@
-/**
+6+/**
  * Inicialización de la aplicación al cargar el DOM.
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -261,7 +261,12 @@ function addRouteToList(properties) {
         
         ${mujerSeguraHtml} 
 
-        <p><strong>Notas:</strong> ${properties.notes ?? '-'}</p>
+        <div class="kv tiempo-ruta-row">
+          <span class="kv-label">Tiempo:</span>
+           <span class="kv-value">${properties.tiempo_ruta ?? '—'}</span>
+        </div>
+
+        <p><strong>Hora de inicio a las 5:30 am - Último camión a las 9:00 pm</strong></p>
         <p><strong>Unidades:</strong> AM:${properties.peak_am ?? 0} MD:${properties.midday ?? 0} PM:${properties.peak_pm ?? 0} NT:${properties.night ?? 0}</p>
         
         <div class="route-item-actions-hybrid">
@@ -355,8 +360,11 @@ function addRouteToList(properties) {
       document.querySelectorAll('input[name="alerta_tipo"]').forEach(radio => radio.checked = false);
     }
   });
+    routesContainer.appendChild(routeItem);
 
-  routesContainer.appendChild(routeItem);
+    //Aplica el filtro para Mujer Segura
+    applyMujerSeguraFilter(); 
+
 }
 
 
@@ -911,3 +919,43 @@ function hideSearchLoading() {
   btn.innerHTML = '<i class="fas fa-search"></i> Buscar Rutas';
   btn.classList.remove('loading');
 }
+
+// Filtro "Solo Mujer Segura"
+let filterMujerSeguraOnly = false;
+
+function ensureMujerSeguraButton() {
+  const list = document.getElementById('routes-container');
+  if (!list) return;
+  if (document.getElementById('btnMujerSegura')) return;
+
+  const bar = document.createElement('div');
+  bar.className = 'filter-ms';
+  bar.innerHTML = `
+    <button id="btnMujerSegura" class="btn-ms" type="button" aria-pressed="false">
+      Solo “Mujer segura”
+    </button>
+  `;
+  // Inserta el botón justo encima de la lista
+  list.parentNode.insertBefore(bar, list);
+
+  const btn = document.getElementById('btnMujerSegura');
+  btn.addEventListener('click', () => {
+    filterMujerSeguraOnly = !filterMujerSeguraOnly;
+    btn.classList.toggle('active', filterMujerSeguraOnly);
+    btn.setAttribute('aria-pressed', String(filterMujerSeguraOnly));
+    btn.textContent = filterMujerSeguraOnly ? 'Mostrar todas' : 'Solo “Mujer segura”';
+    applyMujerSeguraFilter();
+  });
+}
+
+function applyMujerSeguraFilter() {
+  const items = document.querySelectorAll('#routes-container .route-item');
+  items.forEach(item => {
+    const badge = item.querySelector('.mujer-segura-row .badge');
+    const isSafe = badge && /sí|si/i.test(badge.textContent.trim());
+    item.style.display = (filterMujerSeguraOnly && !isSafe) ? 'none' : '';
+  });
+}
+
+// crea el botón cuando cargue el DOM
+document.addEventListener('DOMContentLoaded', ensureMujerSeguraButton);

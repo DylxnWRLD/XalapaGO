@@ -6,7 +6,8 @@
             "properties": {
                 "id": "13930360",
                 "name": "10051",
-                "desc": "Articulo 3ro - Lázaro Cárdenas - Trancas - La Pradera - Las Haciendas",
+                "tiempo_ruta": "80 min",
+                "desc": "Articulo 3ro \/ Lázaro Cárdenas \/ Trancas \/ La Pradera \/ Las Haciendas",
                 "image": "bus51.jpg",
                 "notes": null,
                 "peak_am": 10,

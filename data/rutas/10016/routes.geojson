@@ -6,7 +6,8 @@
             "properties": {
                 "id": "14009162",
                 "name": "10016",
-                "desc": "EL OLMO - TORRE ANIMAS - M. VIDAL - COAPEXPAN",
+                "tiempo_ruta": "100 min",
+                "desc": "EL OLMO \/ TORRE ANIMAS \/ M. VIDAL \/ COAPEXPAN",
                 "image": "bus10016.jpg",
                 "notes": "Se mapeo una variante de esta ruta: me comentan que, unicamente al medio dia, se desvia de Torre Animas hacia El Tabachin, detras de La Marquesa. Pero cubre todos los puntos de la ruta normal.",
                 "peak_am": 10,
