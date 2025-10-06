@@ -20,6 +20,11 @@ let userLocationCircle = null;      // Círculo de radio de proximidad
 let nearestStopMarker = null;       // Marcador de parada más cercana
 let currentUserLocation = null;     // Ubicación actual del usuario
 
+// NUEVAS VARIABLES PARA BÚSQUEDA ORÍGEN-DESTINO (A y B)
+let searchOriginMarker = null;    // Marcador del punto de origen de la búsqueda
+let searchDestinationMarker = null;// Marcador del punto de destino de la búsqueda
+let isUsingGeolocation = true;    // Estado para saber si usamos GPS o input
+
 // Variables para destino final
 let destinationMarker = null;       // Marcador de destino final
 let selectedDestination = null;     // Información del destino seleccionado
@@ -965,3 +970,64 @@ function enableUserLocation() {
     alert("La geolocalización no es soportada en este navegador.");
   }
 }
+
+// =============================================
+// GESTIÓN DE MARCADORES A-B PARA BÚSQUEDA DE RUTAS
+// =============================================
+
+/**
+ * Crea un icono estilizado para los puntos A y B de la búsqueda.
+ * @param {string} label - 'A' para origen, 'B' para destino.
+ * @returns {L.DivIcon} Icono personalizado
+ */
+function createRouteSearchIcon(label) {
+  const color = label === 'A' ? '#3498db' : '#e74c3c'; // Azul para A, Rojo para B
+  return L.divIcon({
+    className: 'route-search-marker',
+    html: `
+        <div class="route-search-pin" style="background-color: ${color}; border: 2px solid white;">${label}</div>
+    `,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42]
+  });
+}
+
+/**
+ * Dibuja los marcadores de origen (A) y destino (B) en el mapa.
+ * @param {Object} origin - { lat, lng, name } del origen.
+ * @param {Object} destination - { lat, lng, name } del destino.
+ */
+function drawRouteSearchMarkers(origin, destination) {
+  clearRouteSearchMarkers();
+
+  // 1. Origen (A)
+  searchOriginMarker = L.marker([origin.lat, origin.lng], {
+    icon: createRouteSearchIcon('A'),
+  }).addTo(map);
+  searchOriginMarker.bindPopup(`<b>Origen (A):</b> ${origin.name || 'Ubicación Actual'}`).openPopup();
+
+  // 2. Destino (B)
+  searchDestinationMarker = L.marker([destination.lat, destination.lng], {
+    icon: createRouteSearchIcon('B'),
+  }).addTo(map);
+  searchDestinationMarker.bindPopup(`<b>Destino (B):</b> ${destination.name}`).openPopup();
+
+  // Ajustar la vista del mapa para incluir ambos marcadores
+  const bounds = L.latLngBounds([origin.lat, origin.lng], [destination.lat, destination.lng]);
+  map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+/**
+ * Limpia los marcadores A y B del mapa.
+ */
+function clearRouteSearchMarkers() {
+  if (searchOriginMarker) {
+    map.removeLayer(searchOriginMarker);
+    searchOriginMarker = null;
+  }
+  if (searchDestinationMarker) {
+    map.removeLayer(searchDestinationMarker);
+    searchDestinationMarker = null;
+  }
+}
+

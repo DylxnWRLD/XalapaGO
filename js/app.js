@@ -2,21 +2,22 @@
  * Inicialización de la aplicación al cargar el DOM.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Inicialización INMEDIATA de UI y Mapa para la percepción de velocidad.
-    initMap(); 
-    setupEventListeners();
-    setupSearchFunctionality();
-    
-    // 2. Tareas secundarias y de fondo
-    enableUserLocation();
-    clearHighlightedStops();
-    
-    // 3. Carga de datos ASÍNCRONA y progresiva.
-    await detectAvailableRoutes(); // Solo esperamos el índice
-    await loadAllRoutesProgressively(); // Lanza la carga y el dibujo en el mapa
-    
-    // 4. Actualización final de la UI (listas y estadísticas)
-    updateUI(); 
+  // 1. Inicialización INMEDIATA de UI y Mapa
+  initMap();
+  setupEventListeners();
+  setupSearchFunctionality();
+
+  // 2. Tareas secundarias y de fondo
+  enableUserLocation();
+
+  // 3. Carga de datos ASÍNCRONA (Debe terminar antes de actualizar la UI)
+  await detectAvailableRoutes();
+  await loadAllRoutesProgressively();
+
+  // 4. Carga de alertas y Actualización final de la UI
+  await loadAlerts();
+  updateUI();
+  clearHighlightedStops();
 });
 
 /** * Variables globales de la aplicación.
@@ -24,7 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 let availableRoutes = [];
 let searchProximityCircle = null;
 let highlightedStops = [];
+let searchProximityCircles = [];
 let routeAlerts = {};
+let proximityThreshold = 500; // Distancia en metros para buscar rutas cercanas
 let isAllRoutesSelected = false; // Variable para el estado del botón "Todas las rutas"
 window.routeLayers = {}; // {'Ruta-01': L.geoJson(...), 'Ruta-02': L.geoJson(...), ...}
 window.stopLayers = {};   // {'Ruta-01': L.markerClusterGroup(...), ...}
@@ -33,7 +36,7 @@ window.allStopsGroup = L.featureGroup();  // Un grupo que contendrá TODAS las c
 window.routesData = { type: "FeatureCollection", features: [] };
 window.stopsData = { type: "FeatureCollection", features: [] };
 
-const API_URL = 'https://xalapago-1.onrender.com'; 
+const API_URL = 'https://xalapago-1.onrender.com';
 
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
@@ -46,63 +49,64 @@ const searchAliases = {
   "uv": "Universidad Veracruzana, Xalapa, Veracruz",
   "plaza crystal": "Plaza Crystal, Xalapa, Veracruz",
   "usbi": "Campus para la Cultura las Artes y el Deporte",
-  "cem": "Centro de Alta Especialidad"
+  "cem": "Centro de Alta Especialidad",
+  "plaza museo": "Cinépolis Museo"
 };
 
 /**
  * Carga las rutas y paradas de forma progresiva y las dibuja.
  */
 async function loadAllRoutesProgressively() {
-    try {
-        // Usar Promise.all para cargar TODAS las rutas en paralelo
-        // pero mapeando la promesa para que cada una se procese y dibuje individualmente.
-        const loadingPromises = availableRoutes.map(routeId => 
-            loadAndDrawSingleRoute(routeId)
-        );
+  try {
+    // Usar Promise.all para cargar TODAS las rutas en paralelo
+    // pero mapeando la promesa para que cada una se procese y dibuje individualmente.
+    const loadingPromises = availableRoutes.map(routeId =>
+      loadAndDrawSingleRoute(routeId)
+    );
 
-        // Esperar a que TODAS las promesas de carga y dibujo se completen.
-        // Esto asegura que `updateUI` (que llama a `populateRoutesList`)
-        // solo se ejecute cuando *todos* los datos estén en `window.routesData` y `window.stopsData`.
-        await Promise.all(loadingPromises);
-        
-        assignRouteColors();
+    // Esperar a que TODAS las promesas de carga y dibujo se completen.
+    // Esto asegura que `updateUI` (que llama a `populateRoutesList`)
+    // solo se ejecute cuando *todos* los datos estén en `window.routesData` y `window.stopsData`.
+    await Promise.all(loadingPromises);
 
-    } catch (error) {
-        console.error('Error al cargar datos progresivamente:', error);
-    }
+    assignRouteColors();
+
+  } catch (error) {
+    console.error('Error al cargar datos progresivamente:', error);
+  }
 }
 
 /**
  * Carga y procesa una sola ruta (route y stops) y la añade a las estructuras globales.
  */
 async function loadAndDrawSingleRoute(routeId) {
-    try {
-        const [routeResponse, stopsResponse] = await Promise.all([
-            fetch(`data/rutas/${routeId}/routes.geojson`),
-            fetch(`data/rutas/${routeId}/stops.geojson`)
-        ]);
+  try {
+    const [routeResponse, stopsResponse] = await Promise.all([
+      fetch(`data/rutas/${routeId}/routes.geojson`),
+      fetch(`data/rutas/${routeId}/stops.geojson`)
+    ]);
 
-        const routeData = await routeResponse.json();
-        const stopsData = await stopsResponse.json();
+    const routeData = await routeResponse.json();
+    const stopsData = await stopsResponse.json();
 
-        // **PASO CLAVE:** Manipulación de datos y dibujo en el mapa
-        // Se hace de forma síncrona DESPUÉS de recibir el JSON, pero
-        // es no-bloqueante en relación con la carga de otras rutas.
-        if (routeData.features?.length > 0) {
-            const routeFeature = routeData.features[0];
-            routeFeature.properties.id = routeId; // Asegura que el ID esté en las propiedades
-            window.routesData.features.push(routeFeature);
-        }
-
-        if (stopsData.features?.length > 0) {
-            // Asigna la ruta a cada parada para la futura identificación/filtrado
-            stopsData.features.forEach(stop => stop.properties.routeId = routeId);
-            window.stopsData.features = window.stopsData.features.concat(stopsData.features);
-        }
-        
-    } catch (error) {
-        console.error(`Error al cargar la ruta ${routeId}:`, error);
+    // **PASO CLAVE:** Manipulación de datos y dibujo en el mapa
+    // Se hace de forma síncrona DESPUÉS de recibir el JSON, pero
+    // es no-bloqueante en relación con la carga de otras rutas.
+    if (routeData.features?.length > 0) {
+      const routeFeature = routeData.features[0];
+      routeFeature.properties.id = routeId; // Asegura que el ID esté en las propiedades
+      window.routesData.features.push(routeFeature);
     }
+
+    if (stopsData.features?.length > 0) {
+      // Asigna la ruta a cada parada para la futura identificación/filtrado
+      stopsData.features.forEach(stop => stop.properties.routeId = routeId);
+      window.stopsData.features = window.stopsData.features.concat(stopsData.features);
+    }
+
+  } catch (error) {
+    console.error(`Error al cargar la ruta ${routeId}:`, error);
+  }
 }
 
 /**
@@ -173,14 +177,14 @@ function populateRoutesList() {
   const allItem = document.createElement('div');
   allItem.className = 'route-item route-item--all';
   allItem.innerHTML = `<h4><i class="fas fa-layer-group"></i> Todas las rutas</h4><p>Ver todas las rutas y paradas</p>`;
-  
+
   allItem.addEventListener('click', () => {
     // Quitar la selección de cualquier ruta individual
     document.querySelectorAll('.route-item.selected-route').forEach(item => item.classList.remove('selected-route'));
 
     if (isAllRoutesSelected) {
       // Si ya está seleccionado, deseleccionar y limpiar el mapa
-      selectRoute('none'); 
+      selectRoute('none');
       isAllRoutesSelected = false;
       allItem.classList.remove('selected');
     } else {
@@ -225,28 +229,28 @@ function populateRoutesList() {
 }
 
 function addRouteToList(properties) {
-    const routesContainer = document.getElementById('routes-container');
-    const routeItem = document.createElement('div');
-    routeItem.className = 'route-item';
-    routeItem.dataset.id = properties.id;
-    const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
+  const routesContainer = document.getElementById('routes-container');
+  const routeItem = document.createElement('div');
+  routeItem.className = 'route-item';
+  routeItem.dataset.id = properties.id;
+  const isFixed = fixedRoutes.includes(properties.id) ? 'checked' : '';
 
-    // Verificamos si hay una alerta guardada para esta ruta.
-    const currentAlert = routeAlerts[properties.id];
-    const buttonText = currentAlert ? 'Modificar Alerta' : 'Agregar Alerta';
-    
-    //Construcción de mujer segura de acuerdo al booleano en la ruta:
-    const v = properties.mujer_segura;
-    const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
+  // Verificamos si hay una alerta guardada para esta ruta.
+  const currentAlert = routeAlerts[properties.id];
+  const buttonText = currentAlert ? 'Modificar Alerta' : 'Agregar Alerta';
 
-    const mujerSeguraHtml = `
+  //Construcción de mujer segura de acuerdo al booleano en la ruta:
+  const v = properties.mujer_segura;
+  const isSafe = (v === true) || (String(v).toLowerCase() === 'si') || (String(v).toLowerCase() === 'sí');
+
+  const mujerSeguraHtml = `
       <div class="kv mujer-segura-row">
         <span class="kv-label">¿Versión “Mujer segura”?</span>
         <span class="badge ${isSafe ? 'ok' : 'no'}">${isSafe ? 'Sí' : 'No'}</span>
       </div>
     `;
 
-    routeItem.innerHTML = `
+  routeItem.innerHTML = `
         <h4><i class="fas fa-route"></i> ${properties.name}</h4>
         <p>
             <strong>Imagen:</strong><br>
@@ -271,88 +275,88 @@ function addRouteToList(properties) {
         <p class="alert-message" style="font-weight:bold; margin-top: 8px;"></p>
     `;
 
-    // Si hay una alerta guardada, la mostramos al crear el elemento.
-    if (currentAlert) {
-        const alertMessage = routeItem.querySelector(".alert-message");
-        if (currentAlert === 'trafico') {
-            routeItem.classList.add('alert-trafico');
-            alertMessage.textContent = "Reporte: Tráfico Intenso 🚦";
-        } else if (currentAlert === 'construccion') {
-            routeItem.classList.add('alert-construccion');
-            alertMessage.textContent = "Reporte: Obra en la Vía 🚧";
-        } else if (currentAlert === 'bloqueo') {
-            routeItem.classList.add('alert-bloqueo');
-            alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
-        }
+  // Si hay una alerta guardada, la mostramos al crear el elemento.
+  if (currentAlert) {
+    const alertMessage = routeItem.querySelector(".alert-message");
+    if (currentAlert === 'trafico') {
+      routeItem.classList.add('alert-trafico');
+      alertMessage.textContent = "Reporte: Tráfico Intenso 🚦";
+    } else if (currentAlert === 'construccion') {
+      routeItem.classList.add('alert-construccion');
+      alertMessage.textContent = "Reporte: Obra en la Vía 🚧";
+    } else if (currentAlert === 'bloqueo') {
+      routeItem.classList.add('alert-bloqueo');
+      alertMessage.textContent = "Reporte: Ruta Bloqueada ⛔";
     }
+  }
 
-    routeItem.addEventListener("click", (e) => {
-        if (!e.target.closest('input, label, button')) {
-            selectRoute(properties.id);
-            
-            // Deseleccionar el botón "Todas las rutas"
-            isAllRoutesSelected = false;
-            const allRoutesButton = document.querySelector('.route-item--all');
-            if (allRoutesButton) {
-              allRoutesButton.classList.remove('selected');
-            }
+  routeItem.addEventListener("click", (e) => {
+    if (!e.target.closest('input, label, button')) {
+      selectRoute(properties.id);
 
-            // Marcar visualmente la ruta seleccionada
-            document.querySelectorAll('.route-item.selected-route').forEach(item => item.classList.remove('selected-route'));
-            routeItem.classList.add('selected-route');
-        }
-    });
+      // Deseleccionar el botón "Todas las rutas"
+      isAllRoutesSelected = false;
+      const allRoutesButton = document.querySelector('.route-item--all');
+      if (allRoutesButton) {
+        allRoutesButton.classList.remove('selected');
+      }
 
-    const checkboxFix = routeItem.querySelector(".fix-route");
-    checkboxFix.addEventListener("change", (e) => {
-        if (e.target.checked) {
-            if (!fixedRoutes.includes(properties.id)) {
-                fixedRoutes.push(properties.id);
-                drawRouteOnMap(properties.id);
-                drawStopsOnMap(properties.id);
-                showToast("Ruta fijada ✅");
-            }
-        } else {
-            fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
-            removeRouteFromMap(properties.id);
-            removeStopsFromMap(properties.id);
-        }
-        populateRoutesList();
-    });
+      // Marcar visualmente la ruta seleccionada
+      document.querySelectorAll('.route-item.selected-route').forEach(item => item.classList.remove('selected-route'));
+      routeItem.classList.add('selected-route');
+    }
+  });
 
-    const alertButton = routeItem.querySelector(".alert-btn-hybrid");
-    alertButton.addEventListener("click", () => {
-        // ✅ INICIO DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
-        const token = localStorage.getItem('token');
-        if (!token) {
-            // El usuario NO está logueado. Redirigir a la página de registro.
-            // Asegúrate de que la ruta sea correcta desde el index.html
-            window.location.href = "InicioSesion/registroUsuario.html"; 
-            return; // Detener la ejecución para no abrir el modal
-        }
-        // ✅ FIN DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
-        
-        const modal = document.getElementById("alertas-modal");
-        const removeButton = document.getElementById("quitar-alerta");
-        const hasAlert = !!routeAlerts[properties.id];
+  const checkboxFix = routeItem.querySelector(".fix-route");
+  checkboxFix.addEventListener("change", (e) => {
+    if (e.target.checked) {
+      if (!fixedRoutes.includes(properties.id)) {
+        fixedRoutes.push(properties.id);
+        drawRouteOnMap(properties.id);
+        drawStopsOnMap(properties.id);
+        showToast("Ruta fijada ✅");
+      }
+    } else {
+      fixedRoutes = fixedRoutes.filter(id => id !== properties.id);
+      removeRouteFromMap(properties.id);
+      removeStopsFromMap(properties.id);
+    }
+    populateRoutesList();
+  });
 
-        removeButton.style.display = hasAlert ? 'inline-block' : 'none';
-        modal.style.display = "flex";
-        setTimeout(() => {
-            modal.style.opacity = 1;
-            modal.querySelector('.modal-content').style.transform = 'scale(1)';
-        }, 10);
-        modal.dataset.routeId = properties.id;
-        
-        // Si hay una alerta, pre-seleccionamos la opción correspondiente en el modal.
-        if (hasAlert) {
-            document.querySelector(`input[name="alerta_tipo"][value="${routeAlerts[properties.id]}"]`).checked = true;
-        } else {
-            document.querySelectorAll('input[name="alerta_tipo"]').forEach(radio => radio.checked = false);
-        }
-    });
+  const alertButton = routeItem.querySelector(".alert-btn-hybrid");
+  alertButton.addEventListener("click", () => {
+    // ✅ INICIO DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // El usuario NO está logueado. Redirigir a la página de registro.
+      // Asegúrate de que la ruta sea correcta desde el index.html
+      window.location.href = "InicioSesion/registroUsuario.html";
+      return; // Detener la ejecución para no abrir el modal
+    }
+    // ✅ FIN DE LA VERIFICACIÓN DEL ESTADO DE LOGIN
 
-    routesContainer.appendChild(routeItem);
+    const modal = document.getElementById("alertas-modal");
+    const removeButton = document.getElementById("quitar-alerta");
+    const hasAlert = !!routeAlerts[properties.id];
+
+    removeButton.style.display = hasAlert ? 'inline-block' : 'none';
+    modal.style.display = "flex";
+    setTimeout(() => {
+      modal.style.opacity = 1;
+      modal.querySelector('.modal-content').style.transform = 'scale(1)';
+    }, 10);
+    modal.dataset.routeId = properties.id;
+
+    // Si hay una alerta, pre-seleccionamos la opción correspondiente en el modal.
+    if (hasAlert) {
+      document.querySelector(`input[name="alerta_tipo"][value="${routeAlerts[properties.id]}"]`).checked = true;
+    } else {
+      document.querySelectorAll('input[name="alerta_tipo"]').forEach(radio => radio.checked = false);
+    }
+  });
+
+  routesContainer.appendChild(routeItem);
 }
 
 
@@ -385,36 +389,114 @@ function cerrarSesion() {
 }
 
 /**
- * Lógica de búsqueda de lugares y rutas.
+ * Lógica de búsqueda de lugares y rutas (AHORA ORÍGEN-DESTINO).
  */
 function setupSearchFunctionality() {
-  const searchInput = document.getElementById('search-place');
-  const searchButton = document.getElementById('search-button');
-  searchButton.addEventListener('click', performSearch);
-  searchInput.addEventListener('keypress', e => e.key === 'Enter' && performSearch());
+  const originInput = document.getElementById('origin-place');
+  const destinationInput = document.getElementById('destination-place');
+  const searchButton = document.getElementById('route-search-button');
+  const toggleButton = document.getElementById('toggle-origin-type');
+  const originStatus = document.getElementById('origin-status');
+
+  // 1. Evento principal de búsqueda
+  searchButton.addEventListener('click', performRouteSearch);
+  destinationInput.addEventListener('keypress', e => e.key === 'Enter' && performRouteSearch());
+
+  // 2. Evento para cambiar el tipo de origen (GPS vs. Manual)
+  toggleButton.addEventListener('click', () => {
+    isUsingGeolocation = !isUsingGeolocation;
+
+    if (isUsingGeolocation) {
+      originInput.value = '';
+      originInput.placeholder = 'Mi ubicación actual';
+      originInput.disabled = true;
+      originStatus.innerHTML = `Usando mi ubicación actual (GPS)`;
+      originStatus.style.color = '#2ecc71';
+      toggleButton.title = 'Usar ubicación actual';
+      toggleButton.querySelector('i').className = 'fas fa-location-arrow';
+    } else {
+      originInput.placeholder = 'Ingresa una ubicación de origen';
+      originInput.disabled = false;
+      originInput.focus();
+      originStatus.innerHTML = `Ingresa una ubicación personalizada`;
+      originStatus.style.color = '#e74c3c';
+      toggleButton.title = 'Establecer origen personalizado';
+      toggleButton.querySelector('i').className = 'fas fa-map-marker-alt';
+    }
+  });
+
+  // Inicializar el estado de origen (por defecto: GPS)
+  originInput.disabled = true;
+  originInput.value = '';
 }
 
-async function performSearch() {
-  const searchTerm = document.getElementById('search-place').value.trim();
-  if (!searchTerm) return alert('Por favor, ingresa un lugar para buscar');
-  
-  // Limpiar selección de rutas y estado
+/**
+ * Orquestador principal de la búsqueda de rutas A a B.
+ */
+async function performRouteSearch() {
+  const destinationTerm = document.getElementById('destination-place').value.trim();
+  const originTerm = document.getElementById('origin-place').value.trim();
+
+  showSearchLoading();
+
+  // Limpiar resultados anteriores
+  clearRouteSearchMarkers();
   selectRoute('none');
   isAllRoutesSelected = false;
-
   clearHighlightedStops();
-  document.getElementById('routes-container').innerHTML = '';
+
+  if (!destinationTerm) {
+    return alert('Por favor, ingresa una ubicación de destino.');
+  }
+
   try {
-    const location = await geocodeSearchTerm(searchTerm);
-    if (location) {
-      map.setView([location.lat, location.lng], 16);
-      findRoutesNearLocation(location);
+    let originLocationResult;
+
+    // 1. Determinar y geocodificar el Origen (A)
+    if (isUsingGeolocation) {
+      if (!currentUserLocation) {
+        return alert('No se ha podido obtener tu ubicación actual. Espera unos segundos o usa la entrada manual.');
+      }
+      originLocationResult = { ...currentUserLocation, name: 'Ubicación Actual (GPS)' };
     } else {
-      searchInRouteData(searchTerm);
+      if (!originTerm) return alert('Por favor, ingresa una ubicación de origen personalizada.');
+      originLocationResult = await geocodeSearchTerm(originTerm);
+      if (!originLocationResult) return alert(`No se encontró el origen: ${originTerm}.`);
+      originLocationResult.name = originLocationResult.displayName;
     }
+
+    // 2. Geocodificar el Destino (B)
+    const destinationLocationResult = await geocodeSearchTerm(destinationTerm);
+    if (!destinationLocationResult) return alert(`No se encontró el destino: ${destinationTerm}.`);
+    destinationLocationResult.name = destinationLocationResult.displayName;
+
+    const distance = calculateDistance(
+      originLocationResult.lat,
+      originLocationResult.lng,
+      destinationLocationResult.lat,
+      destinationLocationResult.lng
+    );
+
+    // Usamos una tolerancia de 50 metros (para evitar errores de precisión en geocodificación)
+    if (distance < 50) {
+      return alert('⛔ El Origen y el Destino son el mismo lugar. Por favor, selecciona dos puntos diferentes.');
+    }
+
+    // 3. Dibujar marcadores A y B
+    drawRouteSearchMarkers(originLocationResult, destinationLocationResult);
+
+    // 4. Buscar rutas que pasen cerca de A y B
+    // Dibuja círculos de proximidad temporales para A y B
+    updateSearchProximityCircle(originLocationResult, proximityThreshold, '#3498db');
+    updateSearchProximityCircle(destinationLocationResult, proximityThreshold, '#e74c3c');
+
+    findRoutesBetweenLocations(originLocationResult, destinationLocationResult);
+
   } catch (error) {
-    console.error('Error en la búsqueda:', error);
-    alert('Error al realizar la búsqueda.');
+    console.error('Error en la búsqueda de rutas A-B:', error);
+    alert('Error al realizar la búsqueda de rutas.');
+  } finally {
+    hideSearchLoading();
   }
 }
 
@@ -424,8 +506,9 @@ function normalizeSearchTerm(term) {
 }
 
 async function geocodeSearchTerm(searchTerm) {
+  // Función para normalizar términos (debe estar definida previamente)
+  const normalized = normalizeSearchTerm(searchTerm);
   try {
-    const normalized = normalizeSearchTerm(searchTerm);
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(normalized + ', Xalapa, Veracruz')}&limit=1`);
     const data = await response.json();
     if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
@@ -436,32 +519,57 @@ async function geocodeSearchTerm(searchTerm) {
   }
 }
 
-function findRoutesNearLocation(location) {
-  const searchTerm = document.getElementById('search-place').value.trim();
-  const proximityThreshold = 500;
-  highlightStopsInRange(location, proximityThreshold);
-  const nearbyStops = allStopLayers.filter(stop => calculateDistance(location.lat, location.lng, stop.coordinates[0], stop.coordinates[1]) <= proximityThreshold);
-  const nearbyRouteIds = [...new Set(nearbyStops.map(stop => stop.routeId))];
-  if (nearbyRouteIds.length > 0) {
-    showSearchResults(nearbyRouteIds, `Rutas cerca de: ${location.displayName || 'tu búsqueda'}`);
+/**
+ * Encuentra rutas que pasan cerca del origen (A) Y cerca del destino (B).
+ * @param {Object} origin - Coordenadas y nombre del origen.
+ * @param {Object} destination - Coordenadas y nombre del destino.
+ */
+function findRoutesBetweenLocations(origin, destination) {
+  const proximityThreshold = 500; // 500 metros
+
+  // Conjuntos para registrar qué rutas tienen paradas cerca de A y B
+  const routesNearOrigin = new Set();
+  const routesNearDestination = new Set();
+
+  // Resaltar el área de búsqueda en el mapa
+  updateSearchProximityCircle(origin, proximityThreshold);
+  updateSearchProximityCircle(destination, proximityThreshold);
+
+  // 1. Mapear todas las paradas para determinar cercanía a A y B
+  allStopLayers.forEach(stop => {
+    const routeId = stop.routeId;
+
+    // Distancia al Origen (A)
+    const distA = calculateDistance(origin.lat, origin.lng, stop.coordinates[0], stop.coordinates[1]);
+    if (distA <= proximityThreshold) {
+      routesNearOrigin.add(routeId);
+    }
+
+    // Distancia al Destino (B)
+    const distB = calculateDistance(destination.lat, destination.lng, stop.coordinates[0], stop.coordinates[1]);
+    if (distB <= proximityThreshold) {
+      routesNearDestination.add(routeId);
+    }
+  });
+
+  // 2. Encontrar rutas que son comunes a AMBOS conjuntos
+  const commonRoutes = [...routesNearOrigin].filter(id => routesNearDestination.has(id));
+
+  // 3. Mostrar resultados
+  if (commonRoutes.length > 0) {
+    showSearchResults(
+      commonRoutes,
+      `Rutas de ${origin.name} a ${destination.name}`
+    );
   } else {
-    searchInRouteData(searchTerm);
-    alert('No se encontraron rutas cercanas. Mostrando resultados relacionados.');
+    alert('No se encontraron rutas directas o con transbordo simple que pasen cerca de ambos puntos.');
+    // No dibujar nada ni borrar lista existente
+    // Limpieza preventiva por si algo se alcanzó a dibujar
+    if (typeof clearRouteSearchMarkers === 'function') clearRouteSearchMarkers();
+    if (typeof clearHighlightedStops === 'function') clearHighlightedStops();
   }
 }
 
-function searchInRouteData(searchTerm) {
-  const term = searchTerm.toLowerCase();
-  const matchingRoutes = window.routesData.features
-    .filter(f => (f.properties.name && f.properties.name.toLowerCase().includes(term)) || (f.properties.desc && f.properties.desc.toLowerCase().includes(term)))
-    .map(f => f.properties.id);
-  if (matchingRoutes.length > 0) {
-    showSearchResults(matchingRoutes, `Rutas relacionadas con: ${searchTerm}`);
-  } else {
-    alert('No se encontraron rutas relacionadas con tu búsqueda.');
-    selectRoute('all');
-  }
-}
 
 let fixedRoutes = [];
 let fixedStopsLayers = {};
@@ -474,19 +582,39 @@ function showSearchResults(routeIds, title) {
   resultsHeader.className = 'search-results-header';
   resultsHeader.innerHTML = `<h3>${title}</h3><button id="clear-search" class="clear-search-btn"><i class="fas fa-times"></i> Limpiar búsqueda</button>`;
   routesContainer.appendChild(resultsHeader);
-  
+
   document.getElementById('clear-search').addEventListener('click', () => {
-    document.getElementById('search-place').value = '';
-    populateRoutesList();
-    selectRoute('all'); // Mostrar todas las rutas por defecto
-    clearHighlightedStops();
-    
-    // Marcar "Todas las rutas" como seleccionado
-    isAllRoutesSelected = true;
-    const allRoutesButton = document.querySelector('.route-item--all');
-    if (allRoutesButton) {
-      allRoutesButton.classList.add('selected');
+    // 1) Limpiar inputs de búsqueda (origen/destino)
+    const originInput = document.getElementById('origin-place');
+    const destinationInput = document.getElementById('destination-place');
+    if (originInput) originInput.value = '';
+    if (destinationInput) destinationInput.value = '';
+
+    // 2) Cerrar popups abiertos y eliminar marcadores A/B + círculos de proximidad
+    if (typeof map !== 'undefined' && map.closePopup) map.closePopup();
+    if (typeof clearRouteSearchMarkers === 'function') clearRouteSearchMarkers(); // elimina searchOriginMarker y searchDestinationMarker
+    if (typeof clearHighlightedStops === 'function') clearHighlightedStops(); // elimina searchProximityCircles y restaura iconos
+
+    // 3) Fallback robusto: eliminar cualquier marcador con el icono 'route-search-marker'
+    // (por si quedara algún marcador huérfano debido a algún edge-case)
+    if (typeof map !== 'undefined' && map.eachLayer) {
+      map.eachLayer(layer => {
+        try {
+          if (layer instanceof L.Marker &&
+            layer.options && layer.options.icon &&
+            layer.options.icon.options && layer.options.icon.options.className === 'route-search-marker') {
+            map.removeLayer(layer);
+          }
+        } catch (e) { /* si falla aquí, no bloqueamos el resto */ }
+      });
     }
+
+    // 4) Restaurar UI a "Todas las rutas"
+    populateRoutesList();
+    selectRoute('none'); // 🔹 Limpia rutas y paradas del mapa
+    isAllRoutesSelected = false;
+    const allRoutesButton = document.querySelector('.route-item--all');
+    if (allRoutesButton) allRoutesButton.classList.add('selected');
   });
 
   const fixedMatches = [];
@@ -532,30 +660,30 @@ function closeModal() {
 }
 
 document.getElementById("guardar-alerta").addEventListener("click", () => {
-    const modal = document.getElementById("alertas-modal");
-    const routeId = modal.dataset.routeId;
-    if (!routeId) return;
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (!routeId) return;
 
-    const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
-    if (selectedAlert) {
-        routeAlerts[routeId] = selectedAlert.value;
-    } else {
-        delete routeAlerts[routeId];
-    }
-    
-    populateRoutesList();
-    closeModal();
+  const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
+  if (selectedAlert) {
+    routeAlerts[routeId] = selectedAlert.value;
+  } else {
+    delete routeAlerts[routeId];
+  }
+
+  populateRoutesList();
+  closeModal();
 });
 
 document.getElementById("quitar-alerta").addEventListener("click", () => {
-    const modal = document.getElementById("alertas-modal");
-    const routeId = modal.dataset.routeId;
-    if (!routeId) return;
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (!routeId) return;
 
-    delete routeAlerts[routeId];
-    
-    populateRoutesList();
-    closeModal();
+  delete routeAlerts[routeId];
+
+  populateRoutesList();
+  closeModal();
 });
 
 document.getElementById("cancelar-alerta").addEventListener("click", closeModal);
@@ -636,11 +764,21 @@ function createHighlightedStopIcon(color) {
   });
 }
 
-function updateSearchProximityCircle(location, radius) {
-  if (searchProximityCircle) map.removeLayer(searchProximityCircle);
-  searchProximityCircle = L.circle([location.lat, location.lng], {
-    color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.1, weight: 2, radius: radius
-  }).addTo(map).bindTooltip(`Radio de búsqueda: ${radius}m`, { permanent: false, direction: 'center' });
+function updateSearchProximityCircle(location, radius, color = '#e74c3c') {
+  // Limpia el círculo anterior antes de dibujar uno nuevo (si solo queremos uno)
+  // Como estamos dibujando dos, usaremos el array `searchProximityCircles`.
+
+  const circle = L.circle([location.lat, location.lng], {
+    color: color,
+    fillColor: color,
+    fillOpacity: 0.1,
+    weight: 2,
+    radius: radius
+  }).addTo(map);
+
+  searchProximityCircles.push(circle);
+
+  // Asegúrate de que clearHighlightedStops limpie estos círculos
 }
 
 function highlightStopsInList(stopIds) {
@@ -662,101 +800,114 @@ function clearHighlightedStops() {
     const route = window.routesData.features.find(r => r.properties.id === stop.routeId);
     stop.marker.setIcon(createStopIcon(route ? route.properties.color : '#f39c12'));
   });
-  highlightedStops = [];
-  if (searchProximityCircle) {
+  // Nuevo: Limpiar círculos de búsqueda A-B
+  searchProximityCircles.forEach(circle => map.removeLayer(circle));
+  searchProximityCircles = [];
+
+  if (searchProximityCircle) { // El círculo de la búsqueda anterior, si aún existe
     map.removeLayer(searchProximityCircle);
     searchProximityCircle = null;
   }
-  document.querySelectorAll('.stop-item').forEach(item => {
-    item.style.backgroundColor = 'white';
-    item.style.borderLeft = 'none';
-  });
 }
 
 /**
  * Carga las alertas desde el servidor y actualiza el objeto local.
  */
 async function loadAlerts() {
-    try {
-        // ✅ CORREGIDO: Usando comillas invertidas (`)
-        const res = await fetch(`${API_URL}/obtenerAlertas`); 
-        if (!res.ok) throw new Error('Error al cargar las alertas del servidor');
-        
-        const alertsArray = await res.json();
-        
-        // Convertir el array de alertas en el objeto routeAlerts local
-        routeAlerts = {}; // Limpia el objeto
-        alertsArray.forEach(alert => {
-            routeAlerts[alert.routeId] = alert.tipo;
-        });
+  try {
+    // ✅ CORREGIDO: Usando comillas invertidas (`)
+    const res = await fetch(`${API_URL}/obtenerAlertas`);
+    if (!res.ok) throw new Error('Error al cargar las alertas del servidor');
 
-        console.log("✅ Alertas cargadas en el cliente:", routeAlerts);
-    } catch (error) {
-        console.error('❌ Error al cargar las alertas iniciales:', error);
-    }
+    const alertsArray = await res.json();
+
+    // Convertir el array de alertas en el objeto routeAlerts local
+    routeAlerts = {}; // Limpia el objeto
+    alertsArray.forEach(alert => {
+      routeAlerts[alert.routeId] = alert.tipo;
+    });
+
+    console.log("✅ Alertas cargadas en el cliente:", routeAlerts);
+  } catch (error) {
+    console.error('❌ Error al cargar las alertas iniciales:', error);
+  }
 }
 
 /**
  * Función para enviar el estado de routeAlerts al servidor.
  */
 async function syncAlerts() {
-    try {
-        // ✅ CORREGIDO: Usando comillas invertidas (`)
-        const res = await fetch(`${API_URL}/agregarAlerta`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            // Envía el OBJETO COMPLETO, incluyendo las eliminaciones (ausencias)
-            body: JSON.stringify({ routeAlerts }) 
-        });
+  try {
+    // ✅ CORREGIDO: Usando comillas invertidas (`)
+    const res = await fetch(`${API_URL}/agregarAlerta`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Envía el OBJETO COMPLETO, incluyendo las eliminaciones (ausencias)
+      body: JSON.stringify({ routeAlerts })
+    });
 
-        console.log("📡 Estado HTTP:", res.status);
-        const text = await res.text();
-        console.log("📦 Respuesta cruda:", text);
+    console.log("📡 Estado HTTP:", res.status);
+    const text = await res.text();
+    console.log("📦 Respuesta cruda:", text);
 
-        if (!res.ok) throw new Error('Error al enviar la alerta al servidor');
-        
-        console.log("✅ Alertas sincronizadas con el servidor.");
-    } catch (error) {
-        console.error('❌ Error al sincronizar alertas:', error);
-    }
+    if (!res.ok) throw new Error('Error al enviar la alerta al servidor');
+
+    console.log("✅ Alertas sincronizadas con el servidor.");
+  } catch (error) {
+    console.error('❌ Error al sincronizar alertas:', error);
+  }
 }
 
 // --- Lógica del Botón "Guardar Alerta" ---
 document.getElementById("guardar-alerta").addEventListener("click", async () => {
-    const modal = document.getElementById("alertas-modal");
-    const routeId = modal.dataset.routeId;
-    if (!routeId) return;
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (!routeId) return;
 
-    const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
-    if (selectedAlert) {
-        routeAlerts[routeId] = selectedAlert.value;
-    } else {
-        delete routeAlerts[routeId];
-    }
-    
-    await syncAlerts();
+  const selectedAlert = document.querySelector('input[name="alerta_tipo"]:checked');
+  if (selectedAlert) {
+    routeAlerts[routeId] = selectedAlert.value;
+  } else {
+    delete routeAlerts[routeId];
+  }
 
-    populateRoutesList();
-    closeModal();
+  await syncAlerts();
+
+  populateRoutesList();
+  closeModal();
 });
 
 
 // --- Lógica del Botón "Quitar Alerta" ---
 document.getElementById("quitar-alerta").addEventListener("click", async () => {
-    const modal = document.getElementById("alertas-modal");
-    const routeId = modal.dataset.routeId;
-    if (!routeId) return;
+  const modal = document.getElementById("alertas-modal");
+  const routeId = modal.dataset.routeId;
+  if (!routeId) return;
 
-    delete routeAlerts[routeId]; 
-    
-    await syncAlerts(); 
+  delete routeAlerts[routeId];
 
-    populateRoutesList();
-    closeModal();
+  await syncAlerts();
+
+  populateRoutesList();
+  closeModal();
 });
 
+/**
+ * Muestra el estado de carga en el botón de búsqueda.
+ */
+function showSearchLoading() {
+  const btn = document.getElementById('route-search-button');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+  btn.classList.add('loading');
+}
 
-(async () => {
-    await loadAlerts(); 
-    populateRoutesList();
-})();
+/**
+ * Restaura el estado normal del botón de búsqueda.
+ */
+function hideSearchLoading() {
+  const btn = document.getElementById('route-search-button');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-search"></i> Buscar Rutas';
+  btn.classList.remove('loading');
+}
