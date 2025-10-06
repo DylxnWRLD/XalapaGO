@@ -6,7 +6,8 @@
             "properties": {
                 "id": "14015630",
                 "name": "10070",
-                "desc": "coapexpan - inst tec 72",
+                "tiempo_ruta": "80 min",
+                "desc": "coapexpan \/ inst tec 72",
                 "image": "bus70.jpg",
                 "notes": "espere 30 a 40 el cami?n es la ruta que mas tarda de las 3 que hay",
                 "peak_am": 10,
