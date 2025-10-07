@@ -19,6 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================
     // ---------------- CONFIGURACION LEAFLET DRAW --------------
     // ==========================================================
+    /**
+     * Opciones de dibujo: Permite dibujar lineas (rutas) y marcadores (paradas).
+     */
 
     let drawControl = new L.Control.Draw({
         edit: { featureGroup: drawnItems },
@@ -52,6 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================
     // ------------------ EVENTOS DE DIBUJO ---------------------
     // ==========================================================
+    /**
+     * Eventos para manejar la creacion, edicion y eliminacion de rutas y paradas.
+     */
 
     map.on(L.Draw.Event.CREATED, e => {
         const layer = e.layer;
@@ -144,7 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------- FUNCIONES AUXILIARES -----------------
     // ==========================================================
 
-    // Guardar la ruta actual en memoria
+   /**
+    * guarda la ruta y paradas actuales en memoria temporal
+    * @returns {void}
+    */
     function guardarRutaTemporal() {
         if (!rutaSeleccionada) return;
 
@@ -162,6 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------- MANEJO DE RUTAS ----------------------
     // ==========================================================
 
+    /**
+     * carga el index.json que contiene la lista de rutas.
+     */
     async function cargarIndex() {
         try {
             const res = await fetch("../data/rutas/index.json");
@@ -172,6 +184,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /**
+     * Muestra la lista de rutas en el sidebar.
+     */
     function mostrarListaRutas() {
         const ul = document.getElementById("listaRutas");
         ul.innerHTML = "";
@@ -184,6 +199,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /**
+     * Carga la ruta seleccionada, ya sea desde memoria temporal o desde archivos.
+     * @param {String} carpeta  Nombre de la carpeta que contiene los archivos de la ruta.
+     */
     async function cargarRutaSeleccionada(carpeta) {
         rutaSeleccionada = carpeta;
         drawnItems.clearLayers();
@@ -201,6 +220,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /**
+     * carga un archivo GeoJSON y lo agrega al mapa.
+     * @param {string} archivo  archivo GeoJSON a cargar.
+     */
     async function cargarRuta(archivo) {
         try {
             const res = await fetch(archivo);
