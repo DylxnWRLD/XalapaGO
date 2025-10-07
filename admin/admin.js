@@ -144,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ------------------- FUNCIONES AUXILIARES -----------------
     // ==========================================================
 
-    // Guardar la ruta actual en memoria
     function guardarRutaTemporal() {
         if (!rutaSeleccionada) return;
 
@@ -190,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
         stopsSequence = 0;
         mostrarListaRutas();
 
-        // Restaurar desde memoria si existe
         if (rutasTemp[rutaSeleccionada]) {
             rutasTemp[rutaSeleccionada].forEach(layer => drawnItems.addLayer(layer));
             const stops = drawnItems.getLayers().filter(l => l.feature?.geometry?.type === "Point");
@@ -272,6 +270,52 @@ document.addEventListener("DOMContentLoaded", () => {
         aParadas.href = URL.createObjectURL(blobParadas);
         aParadas.download = "stops.geojson";
         aParadas.click();
+    });
+
+    // ==========================================================
+    // ----------- IMPORTAR ARCHIVOS GEOJSON LOCALES ------------
+    // ==========================================================
+
+    const uploadBtn = document.getElementById("uploadGeoJSON");
+    const inputGeoJSON = document.getElementById("inputGeoJSON");
+
+    uploadBtn.addEventListener("click", () => {
+        inputGeoJSON.click(); // Abre el explorador
+    });
+
+    inputGeoJSON.addEventListener("change", async (event) => {
+        const archivos = event.target.files;
+        if (archivos.length === 0) return;
+
+        drawnItems.clearLayers();
+        stopsSequence = 0;
+
+        for (const archivo of archivos) {
+            try {
+                const contenido = await archivo.text();
+                const data = JSON.parse(contenido);
+
+                L.geoJSON(data, {
+                    onEachFeature: (feature, layer) => {
+                        if (feature.geometry.type === "LineString") {
+                            feature.properties.name = rutaSeleccionada || "Ruta importada";
+                        }
+                        drawnItems.addLayer(layer);
+                    }
+                });
+
+                console.log(`✅ Importado: ${archivo.name}`);
+            } catch (err) {
+                console.error(`❌ Error al importar ${archivo.name}:`, err);
+            }
+        }
+
+        const stops = drawnItems.getLayers().filter(l => l.feature?.geometry?.type === "Point");
+        stopsSequence = stops.length > 0 ? Math.max(...stops.map(s => s.feature.properties.sequence)) + 1 : 0;
+
+        guardarRutaTemporal();
+        alert("✅ Archivos importados correctamente.");
+        inputGeoJSON.value = "";
     });
 
     // ==========================================================

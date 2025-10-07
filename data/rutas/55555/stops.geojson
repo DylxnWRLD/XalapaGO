@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020000",
+        "routeId": "14010000",
+        "sequence": 0,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.927609,
+          19.539163
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020001",
+        "routeId": "14010000",
+        "sequence": 1,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.929283,
+          19.537631
+        ]
+      }
+    }
+  ]
+}

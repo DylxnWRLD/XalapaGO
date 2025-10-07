@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14010000",
+        "name": "55555",
+        "desc": "FEI - Tecajetes",
+        "image": null,
+        "notes": null,
+        "peak_am": 10,
+        "midday": 10,
+        "peak_pm": 10,
+        "night": 10
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -96.927438,
+            19.543113
+          ],
+          [
+            -96.925979,
+            19.540989
+          ],
+          [
+            -96.928082,
+            19.538885
+          ],
+          [
+            -96.932158,
+            19.535243
+          ],
+          [
+            -96.933553,
+            19.533948
+          ],
+          [
+            -96.932824,
+            19.532391
+          ],
+          [
+            -96.931794,
+            19.530528
+          ]
+        ]
+      }
+    }
+  ]
+}
