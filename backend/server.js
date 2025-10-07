@@ -7,7 +7,10 @@ require("dotenv").config();
 
 const app = express();
 app.use(express.json());
-// 💡 CONFIGURACIÓN DE CORS
+
+/**
+ * configuracion de CORS
+ */
 const corsOptions = {
     // ✅ CORRECCIÓN: SOLO EL DOMINIO PRINCIPAL
     origin: 'https://dylxnwrld.github.io', 
@@ -16,7 +19,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// 🔑 Conectar a MongoDB Atlas
+/**
+ * Conexión a MongoDB Atlas
+ */
 const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI)
   .then(() => console.log("✅ Conectado a MongoDB Atlas"))
@@ -35,7 +40,11 @@ const usuarioSchema = new mongoose.Schema({
 
 const Usuario = mongoose.model("Usuario", usuarioSchema);
 
-// --- Validación de contraseña ---
+/**
+ * Valida que la contraseña cumpla con los requisitos mínimos
+ * @param {string} password contraseña a validar
+ * @returns {boolean} true si es válida, false si no lo es
+ */
 function validarPassword(password) {
   // Ejemplo de requisitos:
   // - mínimo 8 caracteres
@@ -50,7 +59,9 @@ app.get("/", (req, res) => {
     res.status(200).send("Servidor API de XalapaGO está activo y funcionando. La API está disponible en rutas como /login y /obtenerAlertas.");
 });
 
-// 📌 Registro
+/**
+ * Registro de Usuario nuevos
+ */
 app.post("/registroUsuario", async (req, res) => {
   const { usuario, correo, password } = req.body;
 
@@ -84,7 +95,9 @@ app.post("/registroUsuario", async (req, res) => {
   }
 });
 
-// 📌 Login
+/**
+ * Login de Usuario
+ */
 app.post("/login", async (req, res) => {
   const { usuario, password } = req.body;
 
@@ -127,7 +140,9 @@ const alertaSchema = new mongoose.Schema({
 
 const Alerta = mongoose.model("Alerta", alertaSchema);
 
-// 📌 Agregar/Sincronizar Alerta (Ahora sin logs de éxito)
+/**
+ * Sincronizar Alertas
+ */
 app.post("/agregarAlerta", async (req, res) => {
   try {
     const { routeAlerts } = req.body;
@@ -156,7 +171,9 @@ app.post("/agregarAlerta", async (req, res) => {
   }
 });
 
-// Obtener Alertas
+/**
+ * Devuelve todas las alertas guardadas en la base de datos.
+ */
 app.get("/obtenerAlertas", async (req, res) => {
   try {
     // Encuentra todos los documentos en la colección Alerta

@@ -4,6 +4,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const token = localStorage.getItem("token");
 
+  /**
+   * Crea un botón con texto, enlace y función onClick opcionales. 
+   * @param {string} text 
+   * @param {string|null} href 
+   * @param {null} onClick 
+   * @returns {HTMLButtonElement} botón creado
+   */
   function createButton(text, href = null, onClick = null) {
     const btn = document.createElement("button");
     btn.textContent = text;

@@ -1,3 +1,7 @@
+/**
+ * Modelo de datos para usuarios en MongoDB usando Mongoose.
+ * Incluye campos para nombre usuario, correo y contraseña.
+ */
 const mongoose = require("mongoose");
 
 const usuarioSchema = new mongoose.Schema({

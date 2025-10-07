@@ -1249,3 +1249,22 @@ body {
   border-radius:8px; cursor:pointer; font-weight:600;
 }
 .btn-ms.active { background:#e8f7ef; border-color:#9ad5b1; }
+
+/* Mantiene el botón en la esquina inferior derecha para pantallas grandes */
+.btn-centrar {
+  position: absolute;
+  bottom: 30px;  
+  right: 30px;
+  /* ... otros estilos ... */
+}
+
+/* Modifica la posición para móviles en vertical */
+@media (orientation: portrait) {
+  .btn-centrar {
+    display: block; /* Asegura que se muestre */
+    bottom: 90px;  /* Sube el botón para que no estorbe */
+    right: 20px;   /* Ajusta el margen derecho */
+    padding: 12px 14px; /* Hace el botón un poco más pequeño */
+    font-size: 18px;    /* Reduce el tamaño del ícono */
+  }
+}

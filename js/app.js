@@ -38,6 +38,9 @@ window.stopsData = { type: "FeatureCollection", features: [] };
 
 const API_URL = 'https://xalapago-1.onrender.com';
 
+/**
+ * Configuración inicial del mapa y capas base.
+ */
 const mapSettings = {
   defaultCenter: [19.54, -96.91],
   defaultZoom: 13,
@@ -55,6 +58,7 @@ const searchAliases = {
 
 /**
  * Carga las rutas y paradas de forma progresiva y las dibuja.
+ * Se ejecutan en paralelo pero se procesan individualmente.
  */
 async function loadAllRoutesProgressively() {
   try {
@@ -77,7 +81,8 @@ async function loadAllRoutesProgressively() {
 }
 
 /**
- * Carga y procesa una sola ruta (route y stops) y la añade a las estructuras globales.
+ * Carga y dibuja una sola ruta y sus paradas.
+ * @param {string} routeId  id de la ruta a cargar
  */
 async function loadAndDrawSingleRoute(routeId) {
   try {
@@ -228,6 +233,10 @@ function populateRoutesList() {
   unfixedRouteFeatures.forEach(feature => addRouteToList(feature.properties));
 }
 
+/**
+ * Agrega una ruta individual al contenedor de rutas en el panel lateral y demas informacion.
+ * @param {object} properties 
+ */
 function addRouteToList(properties) {
   const routesContainer = document.getElementById('routes-container');
   const routeItem = document.createElement('div');
@@ -508,11 +517,21 @@ async function performRouteSearch() {
   }
 }
 
+/**
+ * Normaliza términos de búsqueda usando un diccionario de alias.
+ * @param {string} term 
+ * @returns {string} Término normalizado (alias si aplica)
+ */
 function normalizeSearchTerm(term) {
   const normalized = term.trim().toLowerCase();
   return searchAliases[normalized] || term;
 }
 
+/**
+ * Geocodifica un término de búsqueda usando Nominatim.
+ * @param {string} searchTerm nombre o dirección a buscar
+ * @returns {Object|null} {lat, lng, displayName} o null si no se encontró
+ */
 async function geocodeSearchTerm(searchTerm) {
   // Función para normalizar términos (debe estar definida previamente)
   const normalized = normalizeSearchTerm(searchTerm);
@@ -583,6 +602,11 @@ let fixedRoutes = [];
 let fixedStopsLayers = {};
 let fixedRoutesLayers = {};
 
+/**
+ * Muestra los resultados de la búsqueda en el panel lateral.
+ * @param {Array<string>} routeIds lista de IDs de rutas a mostrar
+ * @param {string} title 
+ */
 function showSearchResults(routeIds, title) {
   const routesContainer = document.getElementById('routes-container');
   routesContainer.innerHTML = '';
@@ -647,7 +671,10 @@ function showSearchResults(routeIds, title) {
   }
 }
 
-
+/**
+ * muestra un toast temporal en la parte inferior de la pantalla.
+ * @param {string} message texto a mostrar
+ */
 function showToast(message) {
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -660,6 +687,10 @@ function showToast(message) {
 // ==================================================================
 // --- MANEJO CENTRALIZADO DE ALERTAS ---
 // ==================================================================
+
+/**
+ * Cierra el modal de alertas con animación.
+ */
 function closeModal() {
   const modal = document.getElementById("alertas-modal");
   modal.style.opacity = 0;
@@ -699,7 +730,9 @@ document.getElementById("alertas-modal").addEventListener("click", e => e.target
 
 
 /**
- * Funciones para dibujar y remover rutas/paradas del mapa.
+ * Dibuja una ruta específica en el mapa.
+ * @param {string} routeId 
+ * @returns {null}
  */
 function drawRouteOnMap(routeId) {
   const feature = window.routesData.features.find(f => f.properties.id === routeId);
@@ -711,6 +744,11 @@ function drawRouteOnMap(routeId) {
   fixedRoutesLayers[routeId] = layer;
 }
 
+/**
+ * Dibuja las paradas de una ruta específica en el mapa con leaflet.
+ * @param {string} routeId id de la ruta cuyas paradas se dibujarán
+ * @returns {null} si no hay paradas para la ruta
+ */
 function drawStopsOnMap(routeId) {
   const stopsForRoute = window.stopsData.features.filter(f => f.properties.routeId === routeId);
   if (stopsForRoute.length === 0) return;
@@ -722,6 +760,10 @@ function drawStopsOnMap(routeId) {
   fixedStopsLayers[routeId] = stopsLayer;
 }
 
+/**
+ * Elimina una ruta específica del mapa.
+ * @param {string} routeId 
+ */
 function removeRouteFromMap(routeId) {
   if (fixedRoutesLayers[routeId]) {
     map.removeLayer(fixedRoutesLayers[routeId]);
@@ -729,6 +771,10 @@ function removeRouteFromMap(routeId) {
   }
 }
 
+/**
+ * Elimina las paradas de una ruta específica del mapa.
+ * @param {string} routeId 
+ */
 function removeStopsFromMap(routeId) {
   if (fixedStopsLayers[routeId]) {
     map.removeLayer(fixedStopsLayers[routeId]);
@@ -736,6 +782,9 @@ function removeStopsFromMap(routeId) {
   }
 }
 
+/**
+ * Elimina todas las rutas y paradas fijadas del mapa y limpia la lista.
+ */
 function clearFixedRoutes() {
   Object.values(fixedRoutesLayers).forEach(layer => map.removeLayer(layer));
   Object.values(fixedStopsLayers).forEach(layer => map.removeLayer(layer));
@@ -746,7 +795,9 @@ function clearFixedRoutes() {
 }
 
 /**
- * Funciones para resaltar paradas en el mapa y la lista.
+ * Resalta las paradas en el mapa dentro de un radio específico de una ubicación dada.
+ * @param {object} location 
+ * @param {number} radius 
  */
 function highlightStopsInRange(location, radius = 500) {
   clearHighlightedStops();
@@ -763,6 +814,11 @@ function highlightStopsInRange(location, radius = 500) {
   highlightStopsInList(stopsInRange.map(stop => stop.id));
 }
 
+/**
+ * Crea un icono personalizado para las paradas.
+ * @param {string} color 
+ * @returns {L.DivIcon} icono personalizado para paradas resaltadas
+ */
 function createHighlightedStopIcon(color) {
   return L.divIcon({
     className: 'highlighted-stop-icon',
@@ -772,6 +828,12 @@ function createHighlightedStopIcon(color) {
   });
 }
 
+/**
+ * Dibuja un círculo de proximidad en el mapa.
+ * @param {object} location 
+ * @param {number} radius 
+ * @param {string} color 
+ */
 function updateSearchProximityCircle(location, radius, color = '#e74c3c') {
   // Limpia el círculo anterior antes de dibujar uno nuevo (si solo queremos uno)
   // Como estamos dibujando dos, usaremos el array `searchProximityCircles`.
@@ -789,6 +851,10 @@ function updateSearchProximityCircle(location, radius, color = '#e74c3c') {
   // Asegúrate de que clearHighlightedStops limpie estos círculos
 }
 
+/**
+ * Resalta las paradas en la lista lateral.
+ * @param {Array} stopIds 
+ */
 function highlightStopsInList(stopIds) {
   document.querySelectorAll('.stop-item').forEach(item => {
     item.style.backgroundColor = 'white';
@@ -803,6 +869,9 @@ function highlightStopsInList(stopIds) {
   });
 }
 
+/**
+ * Restaura los iconos de las paradas resaltadas y limpia los círculos de búsqueda.
+ */
 function clearHighlightedStops() {
   highlightedStops.forEach(stop => {
     const route = window.routesData.features.find(r => r.properties.id === stop.routeId);
@@ -923,6 +992,10 @@ function hideSearchLoading() {
 // Filtro "Solo Mujer Segura"
 let filterMujerSeguraOnly = false;
 
+/**
+ * Boton para filtrar rutas "Solo Mujer Segura".
+ * @returns {void}
+ */
 function ensureMujerSeguraButton() {
   const list = document.getElementById('routes-container');
   if (!list) return;
@@ -948,6 +1021,9 @@ function ensureMujerSeguraButton() {
   });
 }
 
+/**
+ * Aplica el filtro "Solo Mujer Segura" a la lista de rutas.
+ */
 function applyMujerSeguraFilter() {
   const items = document.querySelectorAll('#routes-container .route-item');
   items.forEach(item => {
