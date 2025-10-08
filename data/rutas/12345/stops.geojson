@@ -4,8 +4,134 @@
     {
       "type": "Feature",
       "properties": {
+        "id": "14020000",
+        "routeId": "14010000",
+        "sequence": 0,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.950741,
+          19.550943
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020001",
+        "routeId": "14010000",
+        "sequence": 1,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.96383,
+          19.549324
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "id": "14020002",
-        "routeId": "14010001",
+        "routeId": "14010000",
+        "sequence": 2,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.960912,
+          19.543012
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020003",
+        "routeId": "14010000",
+        "sequence": 3,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.936536,
+          19.542203
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020000",
+        "routeId": "14010000",
+        "sequence": 4,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.943831,
+          19.546691
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020001",
+        "routeId": "14010000",
+        "sequence": 5,
+        "travelTime": 0,
+        "dwellTime": 0,
+        "arrivalTim": 0,
+        "departureT": 0,
+        "passengerA": 0,
+        "passengerB": 0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.950269,
+          19.542281
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14020002",
+        "routeId": "14010000",
         "sequence": 6,
         "travelTime": 0,
         "dwellTime": 0,
@@ -17,8 +143,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -96.929498,
-          19.529124
+          -96.95632,
+          19.550414
         ]
       }
     },
@@ -26,7 +152,7 @@
       "type": "Feature",
       "properties": {
         "id": "14020003",
-        "routeId": "14010001",
+        "routeId": "14010000",
         "sequence": 7,
         "travelTime": 0,
         "dwellTime": 0,
@@ -38,8 +164,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -96.933618,
-          19.53402
+          -96.947436,
+          19.548755
         ]
       }
     },
@@ -47,7 +173,7 @@
       "type": "Feature",
       "properties": {
         "id": "14020004",
-        "routeId": "14010001",
+        "routeId": "14010000",
         "sequence": 8,
         "travelTime": 0,
         "dwellTime": 0,
@@ -59,113 +185,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -96.930399,
-          19.537136
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "14020005",
-        "routeId": "14010001",
-        "sequence": 9,
-        "travelTime": 0,
-        "dwellTime": 0,
-        "arrivalTim": 0,
-        "departureT": 0,
-        "passengerA": 0,
-        "passengerB": 0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -96.926279,
-          19.541264
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "14020006",
-        "routeId": "14010001",
-        "sequence": 10,
-        "travelTime": 0,
-        "dwellTime": 0,
-        "arrivalTim": 0,
-        "departureT": 0,
-        "passengerA": 0,
-        "passengerB": 0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -96.929412,
-          19.547435
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "14020007",
-        "routeId": "14010001",
-        "sequence": 11,
-        "travelTime": 0,
-        "dwellTime": 0,
-        "arrivalTim": 0,
-        "departureT": 0,
-        "passengerA": 0,
-        "passengerB": 0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -96.928082,
-          19.545452
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "14020008",
-        "routeId": "14010001",
-        "sequence": 12,
-        "travelTime": 0,
-        "dwellTime": 0,
-        "arrivalTim": 0,
-        "departureT": 0,
-        "passengerA": 0,
-        "passengerB": 0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -96.929412,
-          19.553282
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "14020009",
-        "routeId": "14010001",
-        "sequence": 13,
-        "travelTime": 0,
-        "dwellTime": 0,
-        "arrivalTim": 0,
-        "departureT": 0,
-        "passengerA": 0,
-        "passengerB": 0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -96.928811,
-          19.558948
+          -96.939036,
+          19.544646
         ]
       }
     }
