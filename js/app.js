@@ -1,4 +1,4 @@
-6+/**
+/**
  * Inicialización de la aplicación al cargar el DOM.
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -507,7 +507,7 @@ async function performRouteSearch() {
     updateSearchProximityCircle(originLocationResult, proximityThreshold, '#3498db');
     updateSearchProximityCircle(destinationLocationResult, proximityThreshold, '#e74c3c');
 
-    findRoutesBetweenLocations(originLocationResult, destinationLocationResult);
+    findRoutesBetweenLocations(originLocationResult, destinationLocationResult, originTerm, destinationTerm);
 
   } catch (error) {
     console.error('Error en la búsqueda de rutas A-B:', error);
@@ -547,11 +547,35 @@ async function geocodeSearchTerm(searchTerm) {
 }
 
 /**
+ * Busca rutas cuyo campo "desc" contenga el texto indicado.
+ * @param {string} keyword - Texto a buscar dentro de las descripciones de las rutas.
+ * @returns {Array} - Lista de rutas coincidentes (features).
+ */
+function findRouteByDescription(keyword) {
+  if (!window.routesData || !Array.isArray(window.routesData.features) || window.routesData.features.length === 0) {
+    console.warn("⚠️ No se encontró window.routesData o está vacío.");
+    return [];
+  }
+
+  const lowerKeyword = keyword.toLowerCase().trim();
+  if (!lowerKeyword) return [];
+
+  const matchingRoutes = window.routesData.features.filter(feature => {
+    const desc = feature.properties?.desc?.toLowerCase() || "";
+    return desc.includes(lowerKeyword);
+  });
+
+  console.log(`🔍 Se encontraron ${matchingRoutes.length} rutas que coinciden con "${keyword}" en la descripción.`);
+  return matchingRoutes;
+}
+
+
+/**
  * Encuentra rutas que pasan cerca del origen (A) Y cerca del destino (B).
  * @param {Object} origin - Coordenadas y nombre del origen.
  * @param {Object} destination - Coordenadas y nombre del destino.
  */
-function findRoutesBetweenLocations(origin, destination) {
+function findRoutesBetweenLocations(origin, destination, originSearchTerm = "", destinationSearchTerm = "") {
   const proximityThreshold = 500; // 500 metros
 
   // Conjuntos para registrar qué rutas tienen paradas cerca de A y B
@@ -589,12 +613,39 @@ function findRoutesBetweenLocations(origin, destination) {
       `Rutas de ${origin.name} a ${destination.name}`
     );
   } else {
-    alert('No se encontraron rutas directas o con transbordo simple que pasen cerca de ambos puntos.');
-    // No dibujar nada ni borrar lista existente
-    // Limpieza preventiva por si algo se alcanzó a dibujar
-    if (typeof clearRouteSearchMarkers === 'function') clearRouteSearchMarkers();
-    if (typeof clearHighlightedStops === 'function') clearHighlightedStops();
+    // Buscar coincidencias en descripción
+    const originMatches = findRouteByDescription(originSearchTerm);
+    const destinationMatches = findRouteByDescription(destinationSearchTerm);
+
+    // Función para filtrar coincidencias verificando proximidad al otro punto
+    function filterMatchesByOtherPoint(matches, otherPoint) {
+      return matches.filter(routeFeature => {
+        const routeId = routeFeature.properties.id;
+        const stopsForRoute = window.stopsData.features.filter(f => f.properties.routeId === routeId);
+        return stopsForRoute.some(stop => calculateDistance(stop.geometry.coordinates[1], stop.geometry.coordinates[0], otherPoint.lat, otherPoint.lng) <= proximityThreshold);
+      });
+    }
+
+    const filteredOriginMatches = filterMatchesByOtherPoint(originMatches, destination);
+    const filteredDestinationMatches = filterMatchesByOtherPoint(destinationMatches, origin);
+
+    // Combinar resultados sin duplicados
+    const combinedMatches = [
+      ...filteredOriginMatches,
+      ...filteredDestinationMatches.filter(r => !filteredOriginMatches.includes(r))
+    ];
+
+    if (combinedMatches.length > 0) {
+      alert(`⚠️ No se encontraron rutas directas, pero sí ${combinedMatches.length} rutas que pasan cerca de ambos puntos según la descripción.`);
+      showSearchResults(combinedMatches.map(r => r.properties.id), `Coincidencias filtradas por proximidad`);
+    } else {
+      alert('No se encontraron rutas directas ni coincidencias que conecten ambos puntos.');
+      if (typeof clearRouteSearchMarkers === 'function') clearRouteSearchMarkers();
+      if (typeof clearHighlightedStops === 'function') clearHighlightedStops();
+    }
+
   }
+
 }
 
 
